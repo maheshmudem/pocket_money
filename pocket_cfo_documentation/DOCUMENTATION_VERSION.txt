@@ -1,0 +1,5 @@
+Pocket CFO Documentation Pack
+Version: 0.1.0
+Status: Draft baseline / proposed architecture
+Generated: 2026-11-18
+Markdown documents: 52
