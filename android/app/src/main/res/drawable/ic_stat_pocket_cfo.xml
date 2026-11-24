@@ -1,0 +1,10 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Crisp monochrome Pocket CFO wallet-ledger silhouette for Android status bar -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M20,6H5C3.9,6 3,6.9 3,8v10c0,1.1 0.9,2 2,2h15c1.1,0 2,-0.9 2,-2v-2h-5c-1.66,0 -3,-1.34 -3,-3s1.34,-3 3,-3h5V8C22,6.9 21.1,6 20,6zM17,11.5c-0.83,0 -1.5,0.67 -1.5,1.5s0.67,1.5 1.5,1.5h5v-3H17zM17.25,13.75c-0.41,0 -0.75,-0.34 -0.75,-0.75s0.34,-0.75 0.75,-0.75 0.75,0.34 0.75,0.75 -0.34,0.75 -0.75,0.75zM18.5,3.5L6,5h13V4C19,3.72 18.78,3.47 18.5,3.5z" />
+</vector>

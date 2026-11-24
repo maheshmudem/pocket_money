@@ -1,0 +1,43 @@
+name: Backend CI (Django + PostgreSQL 16)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint_and_test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: pocket_cfo_ci
+          POSTGRES_USER: pocket_cfo
+          POSTGRES_PASSWORD: ci_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://pocket_cfo:ci_password@localhost:5432/pocket_cfo_ci
+      PGSSLMODE: disable
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+      DJANGO_SECRET_KEY: ci-ephemeral-secret-key-not-for-prod
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - working-directory: server
+        run: |
+          pip install --upgrade pip
+          pip install ".[postgres,dev]"
+          ruff check .
+          python manage.py makemigrations --check --dry-run
+          python manage.py migrate --noinput
+          python manage.py spectacular --file /tmp/generated_openapi.yaml --validate
+          pytest -v --cov=apps --cov=common

@@ -7,7 +7,9 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Pocket Money</string>
+	<string>Pocket CFO</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Pocket CFO uses Face ID to protect access to your financial profiles and records.</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

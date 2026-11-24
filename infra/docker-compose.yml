@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-pocket_cfo}
+      POSTGRES_USER: ${POSTGRES_USER:-pocket_cfo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_local_dev_only}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pocket_cfo} -d ${POSTGRES_DB:-pocket_cfo}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE:-config.settings.dev}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-dev-only-replace-me-with-64-char-secret}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,10.0.2.2,api}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-pocket_cfo}:${POSTGRES_PASSWORD:-change_me_local_dev_only}@postgres:5432/${POSTGRES_DB:-pocket_cfo}
+      PGSSLMODE: ${PGSSLMODE:-disable}
+    ports:
+      - "8000:8000"
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2"
+
+volumes:
+  pg_data:
