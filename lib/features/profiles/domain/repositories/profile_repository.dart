@@ -33,6 +33,20 @@ abstract interface class ProfileRepository {
     bool queueSync = false,
   });
 
+  /// Updates mutable profile metadata (`name`, `profileType`, `baseCurrencyCode`,
+  /// `timezone`, `editorsCanPost`). Base currency changes record a versioned
+  /// [profileCurrencyHistory] entry without rewriting posted history (`FR-003`).
+  Future<Result<FinancialProfile>> updateProfile({
+    required ProfileId profileId,
+    required String userId,
+    required String name,
+    required ProfileType profileType,
+    String? baseCurrencyCode,
+    String? timezone,
+    bool? editorsCanPost,
+    bool queueSync = false,
+  });
+
   /// Records a versioned currency change without rewriting posted history (`FR-003`).
   Future<Result<FinancialProfile>> changeBaseCurrency({
     required ProfileId profileId,

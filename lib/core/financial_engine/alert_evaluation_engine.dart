@@ -5,6 +5,7 @@ import '../../features/budgets/domain/entities/budget_entity.dart';
 import '../../features/savings_goals/domain/entities/savings_goal_entity.dart';
 import 'currency.dart';
 import 'money.dart';
+import 'monthly_tracker_engine.dart';
 
 enum AlertSeverity { info, warning, critical, celebration }
 
@@ -18,6 +19,7 @@ enum AlertKind {
   goalMilestone50('goal_milestone', AlertSeverity.celebration),
   goalCompleted100('goal_completed', AlertSeverity.celebration),
   recurringDue('recurring_due', AlertSeverity.info),
+  bucketReminder('bucket_reminder', AlertSeverity.info),
   testAlert('test_alert', AlertSeverity.info);
 
   const AlertKind(this.wireType, this.defaultSeverity);
@@ -34,6 +36,7 @@ enum AlertKind {
     'low_balance' => AlertKind.lowBalance,
     'goal_milestone' => AlertKind.goalMilestone50,
     'goal_completed' => AlertKind.goalCompleted100,
+    'bucket_reminder' => AlertKind.bucketReminder,
     'test_alert' => AlertKind.testAlert,
     _ => AlertKind.recurringDue,
   };
@@ -279,6 +282,66 @@ abstract final class AlertEvaluationEngine {
             deepLinkRoute: '/goals',
           ),
         );
+      }
+    }
+
+    return alerts;
+  }
+
+  /// Evaluates scheduled Bucket List reminders and items due within 2 days.
+  static List<EvaluatedAlert> evaluateBucketReminders({
+    required List<BucketPlanInput> items,
+    required DateTime nowUtc,
+    required String currencyCode,
+  }) {
+    final alerts = <EvaluatedAlert>[];
+    final today = DateTime.utc(nowUtc.year, nowUtc.month, nowUtc.day);
+
+    for (final item in items) {
+      if (item.reminderAtUtc != null) {
+        final remDt = DateTime.tryParse(item.reminderAtUtc!)?.toUtc();
+        if (remDt != null && !remDt.isAfter(nowUtc)) {
+          final remDay = remDt.toIso8601String().substring(0, 10);
+          alerts.add(
+            EvaluatedAlert(
+              dedupeKey: 'bucket_reminder:${item.id}:$remDay',
+              kind: AlertKind.bucketReminder,
+              severity: AlertSeverity.info,
+              title: 'Bucket Reminder: ${item.name}',
+              body:
+                  'Planned purchase (${_fmt(item.estimatedMinor, currencyCode)}) reminder triggered — review in Monthly Tracker.',
+              maskedBody:
+                  'Planned purchase reminder for ${item.name} — review in Monthly Tracker.',
+              deepLinkRoute: '/monthly?tab=1',
+            ),
+          );
+        }
+      }
+
+      if (item.dueDateUtc != null) {
+        final dueDt = DateTime.tryParse(item.dueDateUtc!)?.toUtc();
+        if (dueDt != null) {
+          final dueDay = DateTime.utc(dueDt.year, dueDt.month, dueDt.day);
+          final diff = dueDay.difference(today).inDays;
+          if (diff >= 0 && diff <= 2) {
+            final dueStr = dueDay.toIso8601String().substring(0, 10);
+            alerts.add(
+              EvaluatedAlert(
+                dedupeKey: 'bucket_due:${item.id}:$dueStr',
+                kind: AlertKind.bucketReminder,
+                severity: AlertSeverity.warning,
+                title: diff == 0
+                    ? 'Bucket Due Today: ${item.name}'
+                    : 'Bucket Due Soon: ${item.name}',
+                body:
+                    '${item.name} (${_fmt(item.estimatedMinor, currencyCode)}) is due ${diff == 0 ? 'today' : 'in $diff day(s)'}.',
+                maskedBody:
+                    '${item.name} is due ${diff == 0 ? 'today' : 'in $diff day(s)'}. Review in Monthly Tracker.',
+                deepLinkRoute: '/monthly?tab=1',
+              ),
+            );
+          }
+        }
       }
     }
 

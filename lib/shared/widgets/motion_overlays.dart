@@ -19,12 +19,14 @@ class AnimatedNotificationBell extends StatefulWidget {
     super.key,
     this.size = 40,
     this.iconSize = 21,
+    this.onDarkTheater = false,
   });
 
   final int unreadCount;
   final VoidCallback onPressed;
   final double size;
   final double iconSize;
+  final bool onDarkTheater;
 
   @override
   State<AnimatedNotificationBell> createState() =>
@@ -74,78 +76,112 @@ class _AnimatedNotificationBellState extends State<AnimatedNotificationBell>
     final badgeLabel = count > 9 ? '9+' : '$count';
     final duration = AppMotion.resolve(context, AppMotion.fast);
 
+    final onDark = widget.onDarkTheater;
+
     return Tooltip(
       message: count > 0 ? 'Notifications ($count unread)' : 'Notifications',
-      child: Material(
-        color: Colors.transparent,
-        shape: const CircleBorder(),
-        child: InkWell(
-          key: const Key('appbar_notifications_btn'),
-          customBorder: const CircleBorder(),
-          onTap: () {
-            HapticFeedback.selectionClick();
-            widget.onPressed();
-          },
-          child: SizedBox(
-            width: widget.size,
-            height: widget.size,
-            child: Stack(
-              clipBehavior: Clip.none,
-              alignment: Alignment.center,
-              children: [
-                AnimatedBuilder(
-                  animation: _tilt,
-                  builder: (_, child) =>
-                      Transform.rotate(angle: _tilt.value, child: child),
-                  child: Icon(
-                    count > 0
-                        ? Icons.notifications_active_rounded
-                        : Icons.notifications_none_rounded,
-                    size: widget.iconSize,
-                    color: count > 0 ? scheme.primary : scheme.onSurface,
+      child: Container(
+        width: widget.size,
+        height: widget.size,
+        decoration: BoxDecoration(
+          color: onDark
+              ? Colors.white.withValues(alpha: 0.10)
+              : cfo.surfaceElevated,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: onDark
+                ? Colors.white.withValues(alpha: 0.20)
+                : cfo.divider.withValues(alpha: 0.92),
+          ),
+          boxShadow: onDark
+              ? null
+              : [
+                  BoxShadow(
+                    color: cfo.cardShadow,
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
                   ),
-                ),
-                Positioned(
-                  right: 3,
-                  top: 3,
-                  child: AnimatedScale(
-                    scale: count > 0 ? 1.0 : 0.0,
-                    duration: duration,
-                    curve: Curves.easeOutBack,
-                    child: count > 0
-                        ? Container(
-                            key: const Key('appbar_notifications_badge'),
-                            constraints: const BoxConstraints(
-                              minWidth: 17,
-                              minHeight: 17,
-                            ),
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                            decoration: BoxDecoration(
-                              color: cfo.expense,
-                              borderRadius: BorderRadius.circular(
-                                AppSpacing.radiusFull,
-                              ),
-                              border: Border.all(
-                                color: cfo.surfaceElevated,
-                                width: 1.5,
-                              ),
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              badgeLabel,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w800,
-                                height: 1.0,
-                                fontFeatures: [FontFeature.tabularFigures()],
-                              ),
-                            ),
-                          )
-                        : const SizedBox.shrink(),
+                ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          shape: const CircleBorder(),
+          child: InkWell(
+            key: const Key('appbar_notifications_btn'),
+            customBorder: const CircleBorder(),
+            onTap: () {
+              HapticFeedback.selectionClick();
+              widget.onPressed();
+            },
+            child: SizedBox(
+              width: widget.size,
+              height: widget.size,
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  AnimatedBuilder(
+                    animation: _tilt,
+                    builder: (_, child) =>
+                        Transform.rotate(angle: _tilt.value, child: child),
+                    child: Icon(
+                      count > 0
+                          ? Icons.notifications_active_rounded
+                          : Icons.notifications_none_rounded,
+                      size: widget.iconSize,
+                      color: onDark
+                          ? (count > 0
+                                ? const Color(0xFFC4B5FD)
+                                : Colors.white.withValues(alpha: 0.92))
+                          : (count > 0
+                                ? cfo.heroGradientEnd
+                                : scheme.onSurface),
+                    ),
                   ),
-                ),
-              ],
+                  Positioned(
+                    right: -2,
+                    top: -2,
+                    child: AnimatedScale(
+                      scale: count > 0 ? 1.0 : 0.0,
+                      duration: duration,
+                      curve: Curves.easeOutBack,
+                      child: count > 0
+                          ? Container(
+                              key: const Key('appbar_notifications_badge'),
+                              constraints: const BoxConstraints(
+                                minWidth: 17,
+                                minHeight: 17,
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: cfo.expense,
+                                borderRadius: BorderRadius.circular(
+                                  AppSpacing.radiusFull,
+                                ),
+                                border: Border.all(
+                                  color: cfo.surfaceElevated,
+                                  width: 1.5,
+                                ),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                badgeLabel,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w800,
+                                  height: 1.0,
+                                  fontFeatures: [FontFeature.tabularFigures()],
+                                ),
+                              ),
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -254,35 +290,30 @@ class _InAppAlertBannerOverlayState extends State<InAppAlertBannerOverlay>
     final disableAnim = MediaQuery.disableAnimationsOf(context);
 
     final (
-      ModernDialogAccent accent,
       IconData icon,
       Color fg,
       Color bg,
       String badgeText,
     ) = switch (alert.severity) {
       AlertSeverity.critical => (
-        ModernDialogAccent.danger,
         Icons.warning_amber_rounded,
         cfo.expense,
         cfo.expenseContainer,
         'LIMIT CROSSED',
       ),
       AlertSeverity.warning => (
-        ModernDialogAccent.warning,
         Icons.notifications_active_rounded,
         cfo.warning,
         cfo.warningContainer,
         alert.kind == AlertKind.lowBalance ? 'LOW BALANCE' : 'LIMIT ALERT',
       ),
       AlertSeverity.celebration => (
-        ModernDialogAccent.success,
         Icons.emoji_events_rounded,
         cfo.income,
         cfo.incomeContainer,
         'MILESTONE',
       ),
       AlertSeverity.info => (
-        ModernDialogAccent.brand,
         Icons.notifications_rounded,
         scheme.primary,
         scheme.primaryContainer,
@@ -290,10 +321,6 @@ class _InAppAlertBannerOverlayState extends State<InAppAlertBannerOverlay>
       ),
     };
 
-    final (trimStart, trimEnd, _) = FintechAccentCard.resolveTrim(
-      context,
-      accent,
-    );
     final bodyText = alert.bodyForPrivacy(hideBalances: widget.hideBalances);
 
     Widget bannerCard = SafeArea(
@@ -345,14 +372,6 @@ class _InAppAlertBannerOverlayState extends State<InAppAlertBannerOverlay>
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            Container(
-                              height: 3,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [trimStart, trimEnd],
-                                ),
-                              ),
-                            ),
                             Padding(
                               padding: const EdgeInsets.fromLTRB(
                                 12,

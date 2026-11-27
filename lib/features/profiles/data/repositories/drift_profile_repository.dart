@@ -307,6 +307,167 @@ final class DriftProfileRepository implements ProfileRepository {
   }
 
   @override
+  Future<Result<FinancialProfile>> updateProfile({
+    required ProfileId profileId,
+    required String userId,
+    required String name,
+    required ProfileType profileType,
+    String? baseCurrencyCode,
+    String? timezone,
+    bool? editorsCanPost,
+    bool queueSync = false,
+  }) async {
+    final trimmedName = name.trim();
+    if (trimmedName.isEmpty || trimmedName.length > 80) {
+      return const FailureResult(
+        ValidationFailure(
+          message: 'Profile name must be between 1 and 80 characters.',
+        ),
+      );
+    }
+
+    final currentRes = await getProfile(profileId: profileId, userId: userId);
+    if (currentRes.isFailure) return currentRes;
+    final current = currentRes.valueOrNull!;
+    if (!current.permissions.canChangeSettingsOrCurrency) {
+      return const FailureResult(AuthorizationFailure());
+    }
+
+    final nextCurrency = (baseCurrencyCode ?? current.baseCurrencyCode)
+        .trim()
+        .toUpperCase();
+    if (CurrencyCatalog.byCode(nextCurrency) == null) {
+      return FailureResult(
+        ValidationFailure(message: 'Unsupported currency: $nextCurrency.'),
+      );
+    }
+
+    final trimmedTz = timezone?.trim();
+    final nextTimezone = (trimmedTz != null && trimmedTz.isNotEmpty)
+        ? trimmedTz
+        : current.timezone;
+    final nextEditorsCanPost = editorsCanPost ?? current.editorsCanPost;
+
+    final now = _clock.nowIsoUtc();
+    final nextVersion = current.version + 1;
+
+    try {
+      await _db.transaction(() async {
+        if (nextCurrency != current.baseCurrencyCode) {
+          await _db
+              .into(_db.profileCurrencyHistory)
+              .insert(
+                ProfileCurrencyHistoryCompanion.insert(
+                  id: _idGen.nextUuid(),
+                  profileId: profileId.value,
+                  previousCurrencyCode: current.baseCurrencyCode,
+                  newCurrencyCode: nextCurrency,
+                  effectiveAtUtc: now,
+                  changedByUserId: userId,
+                  note: const Value('Updated via Edit Profile'),
+                  createdAtUtc: now,
+                ),
+              );
+
+          await _db
+              .into(_db.auditLogs)
+              .insert(
+                AuditLogsCompanion.insert(
+                  id: _idGen.nextUuid(),
+                  profileId: Value(profileId.value),
+                  actorUserId: userId,
+                  action: 'profile.base_currency_changed',
+                  targetType: 'profile',
+                  targetId: profileId.value,
+                  outcome: 'success',
+                  metadataRedactedJson: Value(
+                    jsonEncode({
+                      'from': current.baseCurrencyCode,
+                      'to': nextCurrency,
+                    }),
+                  ),
+                  createdAtUtc: now,
+                ),
+              );
+        }
+
+        await (_db.update(
+          _db.profiles,
+        )..where((t) => t.id.equals(profileId.value))).write(
+          ProfilesCompanion(
+            name: Value(trimmedName),
+            profileType: Value(profileType.wireValue),
+            baseCurrencyCode: Value(nextCurrency),
+            timezone: Value(nextTimezone),
+            editorsCanPost: Value(nextEditorsCanPost),
+            updatedAtUtc: Value(now),
+            version: Value(nextVersion),
+            syncStatus: Value(queueSync ? 'pending' : current.syncStatus),
+          ),
+        );
+
+        await _db
+            .into(_db.auditLogs)
+            .insert(
+              AuditLogsCompanion.insert(
+                id: _idGen.nextUuid(),
+                profileId: Value(profileId.value),
+                actorUserId: userId,
+                action: 'profile.updated',
+                targetType: 'profile',
+                targetId: profileId.value,
+                outcome: 'success',
+                metadataRedactedJson: Value(
+                  jsonEncode({
+                    'profile_type': profileType.wireValue,
+                    'base_currency_code': nextCurrency,
+                    'timezone': nextTimezone,
+                    'editors_can_post': nextEditorsCanPost,
+                  }),
+                ),
+                createdAtUtc: now,
+              ),
+            );
+
+        if (queueSync) {
+          final opId = _idGen.nextUuid();
+          await _db
+              .into(_db.syncOutbox)
+              .insert(
+                SyncOutboxCompanion.insert(
+                  operationId: opId,
+                  profileId: profileId.value,
+                  entityType: 'profile',
+                  entityId: profileId.value,
+                  operationType: 'update',
+                  baseVersion: Value(current.version),
+                  payloadJson: jsonEncode({
+                    'name': trimmedName,
+                    'profile_type': profileType.wireValue,
+                    'base_currency_code': nextCurrency,
+                    'timezone': nextTimezone,
+                    'editors_can_post': nextEditorsCanPost,
+                  }),
+                  idempotencyKey: opId,
+                  createdAtUtc: now,
+                  status: 'pending',
+                ),
+              );
+        }
+      });
+
+      _logger.info(
+        'profiles',
+        'profile_updated',
+        metadata: {'profile_type': profileType.wireValue},
+      );
+      return getProfile(profileId: profileId, userId: userId);
+    } catch (_) {
+      return const FailureResult(DatabaseFailure());
+    }
+  }
+
+  @override
   Future<Result<FinancialProfile>> changeBaseCurrency({
     required ProfileId profileId,
     required String userId,

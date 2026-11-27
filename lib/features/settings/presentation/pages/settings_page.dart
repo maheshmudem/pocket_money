@@ -12,6 +12,7 @@ import '../../../../core/security/key_manager.dart';
 import '../../../../core/utilities/id_generator.dart';
 import '../../../../shared/widgets/enterprise_layout.dart';
 import '../../../../shared/widgets/fintech_widgets.dart';
+import '../../../../shared/widgets/flagship_visuals.dart';
 import '../../../../shared/widgets/modern_dialogs.dart';
 import '../../../../shared/widgets/modern_dropdown.dart';
 import '../../../../shared/widgets/modern_inputs.dart';
@@ -64,130 +65,229 @@ class SettingsPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // 0. Flagship Vault Security & Privacy Posture Hero
+              StaggeredFadeSlide(
+                index: 0,
+                child: FintechSignatureHero(
+                  tone: lock.isEnabled
+                      ? SignatureHeroTone.emerald
+                      : SignatureHeroTone.indigo,
+                  padding: const EdgeInsets.fromLTRB(16, 15, 16, 14),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(13),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.20),
+                          ),
+                        ),
+                        child: Icon(
+                          lock.isEnabled
+                              ? Icons.verified_user_rounded
+                              : Icons.shield_outlined,
+                          size: 22,
+                          color: lock.isEnabled
+                              ? const Color(0xFF34D399)
+                              : const Color(0xFF93C5FD),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              lock.isEnabled
+                                  ? 'Vault Shield Fortified'
+                                  : 'AES-256 Encrypted Vault',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '${profile?.name ?? 'Local Vault'} • Theme $themeLabel • ${lock.isEnabled ? 'Lock ON' : 'AES-256'}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.74),
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      HeroGlassPill(
+                        label: 'v${env.appVersion}',
+                        dotColor: const Color(0xFF34D399),
+                        foreground: Colors.white,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+
               // 1. Single Canonical Home for Appearance, Theme & Privacy
               const SectionHeader(title: 'Appearance & Privacy'),
               const SizedBox(height: AppSpacing.xs),
-              PressScaleCard(
-                key: const Key('settings_appearance_card'),
-                padding: EdgeInsets.zero,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Row(
-                            children: [
-                              IconSquircle(
-                                icon:
-                                    Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? Icons.dark_mode_rounded
-                                    : Icons.light_mode_rounded,
-                                iconColor: scheme.primary,
-                                backgroundColor: scheme.primaryContainer,
-                                size: 34,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'App Theme',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelLarge
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w700,
-                                            letterSpacing: -0.1,
-                                          ),
+              StaggeredFadeSlide(
+                index: 0,
+                child: PressScaleCard(
+                  key: const Key('settings_appearance_card'),
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Row(
+                              children: [
+                                AnimatedSwitcher(
+                                  duration: AppMotion.resolve(
+                                    context,
+                                    AppMotion.standard,
+                                  ),
+                                  switchInCurve: AppMotion.curveEmphasized,
+                                  transitionBuilder: (child, anim) =>
+                                      FadeTransition(
+                                        opacity: anim,
+                                        child: RotationTransition(
+                                          turns: Tween<double>(
+                                            begin: 0.88,
+                                            end: 1.0,
+                                          ).animate(anim),
+                                          child: child,
+                                        ),
+                                      ),
+                                  child: IconSquircle(
+                                    key: ValueKey<Brightness>(
+                                      Theme.of(context).brightness,
                                     ),
-                                    const SizedBox(height: 1),
-                                    Text(
-                                      'Daylight Light, Obsidian Dark or Auto',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelSmall
-                                          ?.copyWith(color: cfo.subtleText),
-                                    ),
-                                  ],
+                                    icon:
+                                        Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Icons.dark_mode_rounded
+                                        : Icons.light_mode_rounded,
+                                    iconColor: scheme.primary,
+                                    backgroundColor: scheme.primaryContainer,
+                                    size: 34,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              FintechStatusPill(
-                                label: themeLabel,
-                                foreground: scheme.primary,
-                                background: scheme.primaryContainer,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          FintechThemeModePicker(
-                            selectedMode: settings.themeMode,
-                            onChanged: (mode) {
-                              HapticFeedback.selectionClick();
-                              context.read<SettingsCubit>().setThemeMode(mode);
-                            },
-                          ),
-                        ],
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'App Theme',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelLarge
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w700,
+                                              letterSpacing: -0.1,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 1),
+                                      Text(
+                                        'Daylight Light, Obsidian Dark or Auto',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelSmall
+                                            ?.copyWith(color: cfo.subtleText),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                FintechStatusPill(
+                                  label: themeLabel,
+                                  foreground: scheme.primary,
+                                  background: scheme.primaryContainer,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            FintechThemeModePicker(
+                              selectedMode: settings.themeMode,
+                              onChanged: (mode) {
+                                HapticFeedback.selectionClick();
+                                context.read<SettingsCubit>().setThemeMode(
+                                  mode,
+                                );
+                              },
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    Divider(height: 1, color: cfo.divider),
-                    FintechSwitchRow(
-                      icon: settings.hideBalances
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                      iconColor: cfo.transfer,
-                      iconBackground: cfo.transferContainer,
-                      title: 'Mask Balances',
-                      subtitle: 'Hide currency amounts across screens',
-                      value: settings.hideBalances,
-                      onChanged: (_) {
-                        HapticFeedback.selectionClick();
-                        context.read<SettingsCubit>().toggleHideBalances();
-                      },
-                    ),
-                    Divider(height: 1, color: cfo.divider),
-                    FintechSwitchRow(
-                      icon: Icons.shield_outlined,
-                      iconColor: cfo.success,
-                      iconBackground: cfo.successContainer,
-                      title: 'Privacy Shield',
-                      subtitle: 'Hide preview in recent-app switcher',
-                      value: settings.privacyCurtainEnabled,
-                      onChanged: (v) {
-                        HapticFeedback.selectionClick();
-                        context.read<SettingsCubit>().setPrivacyCurtain(v);
-                      },
-                    ),
-                    Divider(height: 1, color: cfo.divider),
-                    FintechSwitchRow(
-                      key: const Key('settings_block_screenshots_switch'),
-                      icon: settings.blockScreenshotsEnabled
-                          ? Icons.phonelink_lock_rounded
-                          : Icons.screenshot_outlined,
-                      iconColor: settings.blockScreenshotsEnabled
-                          ? scheme.primary
-                          : cfo.warning,
-                      iconBackground: settings.blockScreenshotsEnabled
-                          ? scheme.primaryContainer
-                          : cfo.warningContainer,
-                      title: 'Block Screenshots & Recording',
-                      subtitle: settings.blockScreenshotsEnabled
-                          ? 'Screenshots, recording & casting blocked'
-                          : 'Allowed • Use Mask Balances to hide amounts',
-                      value: settings.blockScreenshotsEnabled,
-                      onChanged: (v) =>
-                          _handleBlockScreenshotsToggle(context, v, lock),
-                    ),
-                  ],
+                      Divider(height: 1, color: cfo.divider),
+                      FintechSwitchRow(
+                        icon: settings.hideBalances
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                        iconColor: cfo.transfer,
+                        iconBackground: cfo.transferContainer,
+                        title: 'Mask Balances',
+                        subtitle: 'Hide currency amounts across screens',
+                        value: settings.hideBalances,
+                        onChanged: (_) {
+                          HapticFeedback.selectionClick();
+                          context.read<SettingsCubit>().toggleHideBalances();
+                        },
+                      ),
+                      Divider(height: 1, color: cfo.divider),
+                      FintechSwitchRow(
+                        icon: Icons.shield_outlined,
+                        iconColor: cfo.success,
+                        iconBackground: cfo.successContainer,
+                        title: 'Privacy Shield',
+                        subtitle: 'Hide preview in recent-app switcher',
+                        value: settings.privacyCurtainEnabled,
+                        onChanged: (v) {
+                          HapticFeedback.selectionClick();
+                          context.read<SettingsCubit>().setPrivacyCurtain(v);
+                        },
+                      ),
+                      Divider(height: 1, color: cfo.divider),
+                      FintechSwitchRow(
+                        key: const Key('settings_block_screenshots_switch'),
+                        icon: settings.blockScreenshotsEnabled
+                            ? Icons.phonelink_lock_rounded
+                            : Icons.screenshot_outlined,
+                        iconColor: settings.blockScreenshotsEnabled
+                            ? scheme.primary
+                            : cfo.warning,
+                        iconBackground: settings.blockScreenshotsEnabled
+                            ? scheme.primaryContainer
+                            : cfo.warningContainer,
+                        title: 'Block Screenshots & Recording',
+                        subtitle: settings.blockScreenshotsEnabled
+                            ? 'Screenshots, recording & casting blocked'
+                            : 'Allowed • Use Mask Balances to hide amounts',
+                        value: settings.blockScreenshotsEnabled,
+                        onChanged: (v) =>
+                            _handleBlockScreenshotsToggle(context, v, lock),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
@@ -198,303 +298,315 @@ class SettingsPage extends StatelessWidget {
                 subtitle: 'Limit warnings, low-balance guard & milestones',
               ),
               const SizedBox(height: AppSpacing.xs),
-              PressScaleCard(
-                key: const Key('settings_smart_alerts_section'),
-                padding: EdgeInsets.zero,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    FintechSwitchRow(
-                      key: const Key('settings_notifications_master_switch'),
-                      icon: Icons.notifications_active_outlined,
-                      iconColor: scheme.primary,
-                      iconBackground: scheme.primaryContainer,
-                      title: 'Local Notifications',
-                      subtitle: 'Heads-up alerts with privacy masking',
-                      value: settings.notificationsEnabled,
-                      onChanged: (v) {
-                        HapticFeedback.selectionClick();
-                        context.read<SettingsCubit>().setNotificationsEnabled(
-                          v,
-                        );
-                      },
-                    ),
-                    Divider(height: 1, color: cfo.divider),
-                    FintechSwitchRow(
-                      icon: Icons.pie_chart_outline_rounded,
-                      iconColor: cfo.expense,
-                      iconBackground: cfo.expenseContainer,
-                      title: 'Budget Limit Alerts',
-                      subtitle: 'Notify at 80% & 100% of budget caps',
-                      value: settings.budgetAlertsEnabled,
-                      onChanged: (v) {
-                        HapticFeedback.selectionClick();
-                        context.read<SettingsCubit>().setBudgetAlertsEnabled(v);
-                      },
-                    ),
-                    Divider(height: 1, color: cfo.divider),
-                    FintechSwitchRow(
-                      icon: Icons.account_balance_wallet_outlined,
-                      iconColor: cfo.warning,
-                      iconBackground: cfo.warningContainer,
-                      title: 'Low Balance Guard',
-                      subtitle:
-                          'Warn at or below $ccy ${_formatWholeAmount(settings.lowBalanceThresholdMinor, ccy)}',
-                      value: settings.lowBalanceAlertsEnabled,
-                      onChanged: (v) {
-                        HapticFeedback.selectionClick();
-                        context
-                            .read<SettingsCubit>()
-                            .setLowBalanceAlertsEnabled(v);
-                      },
-                      bottomChild: settings.lowBalanceAlertsEnabled
-                          ? Builder(
-                              builder: (context) {
-                                final factor =
-                                    CurrencyCatalog.byCode(ccy)?.minorFactor ??
-                                    100;
-                                final presets = [
-                                  (500 * factor, '500'),
-                                  (1000 * factor, '1,000'),
-                                  (5000 * factor, '5,000'),
-                                ];
-                                final isCustom = !presets.any(
-                                  (p) =>
-                                      p.$1 == settings.lowBalanceThresholdMinor,
-                                );
-                                return Container(
-                                  padding: const EdgeInsets.all(3),
-                                  decoration: BoxDecoration(
-                                    color: cfo.surfaceTonal,
-                                    borderRadius: BorderRadius.circular(
-                                      AppSpacing.radiusMd,
+              StaggeredFadeSlide(
+                index: 1,
+                child: PressScaleCard(
+                  key: const Key('settings_smart_alerts_section'),
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      FintechSwitchRow(
+                        key: const Key('settings_notifications_master_switch'),
+                        icon: Icons.notifications_active_outlined,
+                        iconColor: scheme.primary,
+                        iconBackground: scheme.primaryContainer,
+                        title: 'Local Notifications',
+                        subtitle: 'Heads-up alerts with privacy masking',
+                        value: settings.notificationsEnabled,
+                        onChanged: (v) {
+                          HapticFeedback.selectionClick();
+                          context.read<SettingsCubit>().setNotificationsEnabled(
+                            v,
+                          );
+                        },
+                      ),
+                      Divider(height: 1, color: cfo.divider),
+                      FintechSwitchRow(
+                        icon: Icons.pie_chart_outline_rounded,
+                        iconColor: cfo.expense,
+                        iconBackground: cfo.expenseContainer,
+                        title: 'Budget Limit Alerts',
+                        subtitle: 'Notify at 80% & 100% of budget caps',
+                        value: settings.budgetAlertsEnabled,
+                        onChanged: (v) {
+                          HapticFeedback.selectionClick();
+                          context.read<SettingsCubit>().setBudgetAlertsEnabled(
+                            v,
+                          );
+                        },
+                      ),
+                      Divider(height: 1, color: cfo.divider),
+                      FintechSwitchRow(
+                        icon: Icons.account_balance_wallet_outlined,
+                        iconColor: cfo.warning,
+                        iconBackground: cfo.warningContainer,
+                        title: 'Low Balance Guard',
+                        subtitle:
+                            'Warn at or below $ccy ${_formatWholeAmount(settings.lowBalanceThresholdMinor, ccy)}',
+                        value: settings.lowBalanceAlertsEnabled,
+                        onChanged: (v) {
+                          HapticFeedback.selectionClick();
+                          context
+                              .read<SettingsCubit>()
+                              .setLowBalanceAlertsEnabled(v);
+                        },
+                        bottomChild: settings.lowBalanceAlertsEnabled
+                            ? Builder(
+                                builder: (context) {
+                                  final factor =
+                                      CurrencyCatalog.byCode(
+                                        ccy,
+                                      )?.minorFactor ??
+                                      100;
+                                  final presets = [
+                                    (500 * factor, '500'),
+                                    (1000 * factor, '1,000'),
+                                    (5000 * factor, '5,000'),
+                                  ];
+                                  final isCustom = !presets.any(
+                                    (p) =>
+                                        p.$1 ==
+                                        settings.lowBalanceThresholdMinor,
+                                  );
+                                  return Container(
+                                    padding: const EdgeInsets.all(3),
+                                    decoration: BoxDecoration(
+                                      color: cfo.surfaceTonal,
+                                      borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusMd,
+                                      ),
+                                      border: Border.all(color: cfo.divider),
                                     ),
-                                    border: Border.all(color: cfo.divider),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      for (final (i, preset)
-                                          in presets.indexed) ...[
-                                        if (i > 0) const SizedBox(width: 4),
-                                        Expanded(
-                                          child: Builder(
-                                            builder: (context) {
-                                              final selected =
-                                                  settings
-                                                      .lowBalanceThresholdMinor ==
-                                                  preset.$1;
-                                              return Material(
-                                                color: selected
-                                                    ? scheme.primaryContainer
-                                                    : Colors.transparent,
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                      AppSpacing.radiusSm,
-                                                    ),
-                                                child: InkWell(
+                                    child: Row(
+                                      children: [
+                                        for (final (i, preset)
+                                            in presets.indexed) ...[
+                                          if (i > 0) const SizedBox(width: 4),
+                                          Expanded(
+                                            child: Builder(
+                                              builder: (context) {
+                                                final selected =
+                                                    settings
+                                                        .lowBalanceThresholdMinor ==
+                                                    preset.$1;
+                                                return Material(
+                                                  color: selected
+                                                      ? scheme.primaryContainer
+                                                      : Colors.transparent,
                                                   borderRadius:
                                                       BorderRadius.circular(
                                                         AppSpacing.radiusSm,
                                                       ),
-                                                  onTap: () {
-                                                    HapticFeedback.selectionClick();
-                                                    context
-                                                        .read<SettingsCubit>()
-                                                        .setLowBalanceThresholdMinor(
-                                                          preset.$1,
-                                                        );
-                                                  },
-                                                  child: Container(
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          vertical: 7,
-                                                          horizontal: 5,
+                                                  child: InkWell(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          AppSpacing.radiusSm,
                                                         ),
-                                                    decoration: BoxDecoration(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            AppSpacing.radiusSm,
+                                                    onTap: () {
+                                                      HapticFeedback.selectionClick();
+                                                      context
+                                                          .read<SettingsCubit>()
+                                                          .setLowBalanceThresholdMinor(
+                                                            preset.$1,
+                                                          );
+                                                    },
+                                                    child: Container(
+                                                      padding:
+                                                          const EdgeInsets.symmetric(
+                                                            vertical: 7,
+                                                            horizontal: 5,
                                                           ),
-                                                      border: selected
-                                                          ? Border.all(
-                                                              color: scheme
-                                                                  .primary,
-                                                            )
-                                                          : null,
-                                                    ),
-                                                    alignment: Alignment.center,
-                                                    child: FittedBox(
-                                                      fit: BoxFit.scaleDown,
-                                                      child: Text(
-                                                        '$ccy ${preset.$2}',
-                                                        style: Theme.of(context)
-                                                            .textTheme
-                                                            .labelSmall
-                                                            ?.copyWith(
-                                                              color: selected
-                                                                  ? scheme
-                                                                        .onPrimaryContainer
-                                                                  : cfo.subtleText,
-                                                              fontWeight:
-                                                                  selected
-                                                                  ? FontWeight
-                                                                        .w800
-                                                                  : FontWeight
-                                                                        .w600,
-                                                              fontFeatures: const [
-                                                                FontFeature.tabularFigures(),
-                                                              ],
+                                                      decoration: BoxDecoration(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              AppSpacing
+                                                                  .radiusSm,
                                                             ),
+                                                        border: selected
+                                                            ? Border.all(
+                                                                color: scheme
+                                                                    .primary,
+                                                              )
+                                                            : null,
+                                                      ),
+                                                      alignment:
+                                                          Alignment.center,
+                                                      child: FittedBox(
+                                                        fit: BoxFit.scaleDown,
+                                                        child: Text(
+                                                          '$ccy ${preset.$2}',
+                                                          style: Theme.of(context)
+                                                              .textTheme
+                                                              .labelSmall
+                                                              ?.copyWith(
+                                                                color: selected
+                                                                    ? scheme
+                                                                          .onPrimaryContainer
+                                                                    : cfo.subtleText,
+                                                                fontWeight:
+                                                                    selected
+                                                                    ? FontWeight
+                                                                          .w800
+                                                                    : FontWeight
+                                                                          .w600,
+                                                                fontFeatures:
+                                                                    const [
+                                                                      FontFeature.tabularFigures(),
+                                                                    ],
+                                                              ),
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                      ],
-                                      const SizedBox(width: 4),
-                                      Expanded(
-                                        child: Material(
-                                          color: isCustom
-                                              ? scheme.primaryContainer
-                                              : Colors.transparent,
-                                          borderRadius: BorderRadius.circular(
-                                            AppSpacing.radiusSm,
-                                          ),
-                                          child: InkWell(
-                                            key: const Key(
-                                              'settings_low_balance_custom_btn',
+                                                );
+                                              },
                                             ),
+                                          ),
+                                        ],
+                                        const SizedBox(width: 4),
+                                        Expanded(
+                                          child: Material(
+                                            color: isCustom
+                                                ? scheme.primaryContainer
+                                                : Colors.transparent,
                                             borderRadius: BorderRadius.circular(
                                               AppSpacing.radiusSm,
                                             ),
-                                            onTap: () =>
-                                                _openCustomLowBalanceDialog(
-                                                  context,
-                                                  ccy,
-                                                  factor,
-                                                  settings
-                                                      .lowBalanceThresholdMinor,
-                                                ),
-                                            child: Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    vertical: 7,
-                                                    horizontal: 5,
-                                                  ),
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                      AppSpacing.radiusSm,
-                                                    ),
-                                                border: isCustom
-                                                    ? Border.all(
-                                                        color: scheme.primary,
-                                                      )
-                                                    : null,
+                                            child: InkWell(
+                                              key: const Key(
+                                                'settings_low_balance_custom_btn',
                                               ),
-                                              alignment: Alignment.center,
-                                              child: FittedBox(
-                                                fit: BoxFit.scaleDown,
-                                                child: Text(
-                                                  'Custom',
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .labelSmall
-                                                      ?.copyWith(
-                                                        color: isCustom
-                                                            ? scheme
-                                                                  .onPrimaryContainer
-                                                            : cfo.subtleText,
-                                                        fontWeight: isCustom
-                                                            ? FontWeight.w800
-                                                            : FontWeight.w600,
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    AppSpacing.radiusSm,
+                                                  ),
+                                              onTap: () =>
+                                                  _openCustomLowBalanceDialog(
+                                                    context,
+                                                    ccy,
+                                                    factor,
+                                                    settings
+                                                        .lowBalanceThresholdMinor,
+                                                  ),
+                                              child: Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      vertical: 7,
+                                                      horizontal: 5,
+                                                    ),
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                        AppSpacing.radiusSm,
                                                       ),
+                                                  border: isCustom
+                                                      ? Border.all(
+                                                          color: scheme.primary,
+                                                        )
+                                                      : null,
+                                                ),
+                                                alignment: Alignment.center,
+                                                child: FittedBox(
+                                                  fit: BoxFit.scaleDown,
+                                                  child: Text(
+                                                    'Custom',
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .labelSmall
+                                                        ?.copyWith(
+                                                          color: isCustom
+                                                              ? scheme
+                                                                    .onPrimaryContainer
+                                                              : cfo.subtleText,
+                                                          fontWeight: isCustom
+                                                              ? FontWeight.w800
+                                                              : FontWeight.w600,
+                                                        ),
+                                                  ),
                                                 ),
                                               ),
                                             ),
                                           ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            )
-                          : null,
-                    ),
-                    Divider(height: 1, color: cfo.divider),
-                    FintechSwitchRow(
-                      icon: Icons.emoji_events_outlined,
-                      iconColor: cfo.income,
-                      iconBackground: cfo.incomeContainer,
-                      title: 'Goal Milestones',
-                      subtitle: 'Celebrate 50% & 100% savings targets',
-                      value: settings.goalMilestoneAlertsEnabled,
-                      onChanged: (v) {
-                        HapticFeedback.selectionClick();
-                        context
-                            .read<SettingsCubit>()
-                            .setGoalMilestoneAlertsEnabled(v);
-                      },
-                    ),
-                    Divider(height: 1, color: cfo.divider),
-                    FintechSwitchRow(
-                      icon: Icons.alarm_rounded,
-                      iconColor: cfo.transfer,
-                      iconBackground: cfo.transferContainer,
-                      title: 'Daily Check-In',
-                      subtitle:
-                          'Reminder at ${TimeOfDay(hour: settings.dailyReminderHour, minute: settings.dailyReminderMinute).format(context)}',
-                      value: settings.dailyReminderEnabled,
-                      onChanged: (v) {
-                        HapticFeedback.selectionClick();
-                        context.read<SettingsCubit>().setDailyReminder(
-                          enabled: v,
-                        );
-                      },
-                    ),
-                    if (profile != null) ...[
+                                      ],
+                                    ),
+                                  );
+                                },
+                              )
+                            : null,
+                      ),
                       Divider(height: 1, color: cfo.divider),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: FilledButton.tonalIcon(
-                                key: const Key(
-                                  'settings_send_test_notification_btn',
+                      FintechSwitchRow(
+                        icon: Icons.emoji_events_outlined,
+                        iconColor: cfo.income,
+                        iconBackground: cfo.incomeContainer,
+                        title: 'Goal Milestones',
+                        subtitle: 'Celebrate 50% & 100% savings targets',
+                        value: settings.goalMilestoneAlertsEnabled,
+                        onChanged: (v) {
+                          HapticFeedback.selectionClick();
+                          context
+                              .read<SettingsCubit>()
+                              .setGoalMilestoneAlertsEnabled(v);
+                        },
+                      ),
+                      Divider(height: 1, color: cfo.divider),
+                      FintechSwitchRow(
+                        icon: Icons.alarm_rounded,
+                        iconColor: cfo.transfer,
+                        iconBackground: cfo.transferContainer,
+                        title: 'Daily Check-In',
+                        subtitle:
+                            'Reminder at ${TimeOfDay(hour: settings.dailyReminderHour, minute: settings.dailyReminderMinute).format(context)}',
+                        value: settings.dailyReminderEnabled,
+                        onChanged: (v) {
+                          HapticFeedback.selectionClick();
+                          context.read<SettingsCubit>().setDailyReminder(
+                            enabled: v,
+                          );
+                        },
+                      ),
+                      if (profile != null) ...[
+                        Divider(height: 1, color: cfo.divider),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: FilledButton.tonalIcon(
+                                  key: const Key(
+                                    'settings_send_test_notification_btn',
+                                  ),
+                                  style: FilledButton.styleFrom(
+                                    minimumSize: const Size(0, 40),
+                                  ),
+                                  onPressed: () async {
+                                    HapticFeedback.selectionClick();
+                                    await GetIt.I<FinancialAlertsCoordinator>()
+                                        .sendTestNotification(profile.id);
+                                  },
+                                  icon: const Icon(
+                                    Icons.notifications_active_rounded,
+                                    size: 16,
+                                  ),
+                                  label: const Text('Send Test Alert'),
                                 ),
-                                style: FilledButton.styleFrom(
+                              ),
+                              const SizedBox(width: 8),
+                              OutlinedButton(
+                                style: OutlinedButton.styleFrom(
                                   minimumSize: const Size(0, 40),
                                 ),
-                                onPressed: () async {
-                                  HapticFeedback.selectionClick();
-                                  await GetIt.I<FinancialAlertsCoordinator>()
-                                      .sendTestNotification(profile.id);
-                                },
-                                icon: const Icon(
-                                  Icons.notifications_active_rounded,
-                                  size: 16,
-                                ),
-                                label: const Text('Send Test Alert'),
+                                onPressed: () => context.push('/notifications'),
+                                child: const Text('Inbox'),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            OutlinedButton(
-                              style: OutlinedButton.styleFrom(
-                                minimumSize: const Size(0, 40),
-                              ),
-                              onPressed: () => context.push('/notifications'),
-                              child: const Text('Inbox'),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
@@ -502,49 +614,52 @@ class SettingsPage extends StatelessWidget {
               // 3. Vault Security
               const SectionHeader(title: 'Vault Security'),
               const SizedBox(height: AppSpacing.xs),
-              PressScaleCard(
-                padding: EdgeInsets.zero,
-                child: Column(
-                  children: [
-                    FintechSwitchRow(
-                      icon: Icons.fingerprint_rounded,
-                      iconColor: scheme.primary,
-                      iconBackground: scheme.primaryContainer,
-                      title: 'Biometric & PIN Lock',
-                      subtitle: lock.isEnabled
-                          ? '${lock.biometricEnabled ? "Biometric + PIN" : "PIN Only"} • ${lock.timeoutSeconds}s'
-                          : 'Off • Tap to protect local vault',
-                      value: lock.isEnabled,
-                      onChanged: (enable) {
-                        HapticFeedback.selectionClick();
-                        if (enable) {
-                          _openConfigureLockDialog(context, lock);
-                        } else {
-                          _openVerifyDisableLockDialog(context);
-                        }
-                      },
-                    ),
-                    if (lock.isEnabled) ...[
-                      Divider(height: 1, color: cfo.divider),
-                      FintechSettingRow(
-                        icon: Icons.password_rounded,
+              StaggeredFadeSlide(
+                index: 2,
+                child: PressScaleCard(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      FintechSwitchRow(
+                        icon: Icons.fingerprint_rounded,
                         iconColor: scheme.primary,
                         iconBackground: scheme.primaryContainer,
-                        title: 'Change App PIN',
-                        subtitle: 'Update your fallback vault passcode',
-                        onTap: () => _openChangePinDialog(context),
+                        title: 'Biometric & PIN Lock',
+                        subtitle: lock.isEnabled
+                            ? '${lock.biometricEnabled ? "Biometric + PIN" : "PIN Only"} • ${lock.timeoutSeconds}s'
+                            : 'Off • Tap to protect local vault',
+                        value: lock.isEnabled,
+                        onChanged: (enable) {
+                          HapticFeedback.selectionClick();
+                          if (enable) {
+                            _openConfigureLockDialog(context, lock);
+                          } else {
+                            _openVerifyDisableLockDialog(context);
+                          }
+                        },
                       ),
-                      Divider(height: 1, color: cfo.divider),
-                      FintechSettingRow(
-                        icon: Icons.lock_clock_outlined,
-                        iconColor: cfo.warning,
-                        iconBackground: cfo.warningContainer,
-                        title: 'Lock App Now',
-                        subtitle: 'Require PIN or biometric immediately',
-                        onTap: () => context.read<AppLockCubit>().lockNow(),
-                      ),
+                      if (lock.isEnabled) ...[
+                        Divider(height: 1, color: cfo.divider),
+                        FintechSettingRow(
+                          icon: Icons.password_rounded,
+                          iconColor: scheme.primary,
+                          iconBackground: scheme.primaryContainer,
+                          title: 'Change App PIN',
+                          subtitle: 'Update your fallback vault passcode',
+                          onTap: () => _openChangePinDialog(context),
+                        ),
+                        Divider(height: 1, color: cfo.divider),
+                        FintechSettingRow(
+                          icon: Icons.lock_clock_outlined,
+                          iconColor: cfo.warning,
+                          iconBackground: cfo.warningContainer,
+                          title: 'Lock App Now',
+                          subtitle: 'Require PIN or biometric immediately',
+                          onTap: () => context.read<AppLockCubit>().lockNow(),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
@@ -552,94 +667,101 @@ class SettingsPage extends StatelessWidget {
               // 4. Device & Session (FR-021)
               const SectionHeader(title: 'Device & Session (FR-021)'),
               const SizedBox(height: AppSpacing.xs),
-              _DeviceSessionCard(
-                auth: auth,
-                env: env,
-                onConfirmLogout: (isLocal) =>
-                    _confirmSignOut(context, isLocal: isLocal),
+              StaggeredFadeSlide(
+                index: 3,
+                child: _DeviceSessionCard(
+                  auth: auth,
+                  env: env,
+                  onConfirmLogout: (isLocal) =>
+                      _confirmSignOut(context, isLocal: isLocal),
+                ),
               ),
               const SizedBox(height: AppSpacing.md),
 
               // 5. Ledger Integrity & Diagnostics
               const SectionHeader(title: 'Ledger Integrity & Diagnostics'),
               const SizedBox(height: AppSpacing.xs),
-              PressScaleCard(
-                padding: EdgeInsets.zero,
-                child: Column(
-                  children: [
-                    FintechSettingRow(
-                      icon: Icons.verified_outlined,
-                      iconColor: cfo.success,
-                      iconBackground: cfo.successContainer,
-                      title: 'Ledger Reconciliation',
-                      subtitle: 'Verify all journals balance to exact unit',
-                      onTap: profile == null
-                          ? null
-                          : () async {
-                              final rep = await GetIt.I<TransactionRepository>()
-                                  .runReconciliationCheck(profile.id);
-                              if (!context.mounted) return;
-                              final r = rep.valueOrNull;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  behavior: SnackBarBehavior.floating,
-                                  content: Text(
-                                    r != null && r.isHealthy
-                                        ? 'Healthy: ${r.postedJournalCount} posted journals reconciled (Debits == Credits).'
-                                        : 'Reconciliation warning: check diagnostics.',
+              StaggeredFadeSlide(
+                index: 4,
+                child: PressScaleCard(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      FintechSettingRow(
+                        icon: Icons.verified_outlined,
+                        iconColor: cfo.success,
+                        iconBackground: cfo.successContainer,
+                        title: 'Ledger Reconciliation',
+                        subtitle: 'Verify all journals balance to exact unit',
+                        onTap: profile == null
+                            ? null
+                            : () async {
+                                final rep =
+                                    await GetIt.I<TransactionRepository>()
+                                        .runReconciliationCheck(profile.id);
+                                if (!context.mounted) return;
+                                final r = rep.valueOrNull;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    behavior: SnackBarBehavior.floating,
+                                    content: Text(
+                                      r != null && r.isHealthy
+                                          ? 'Healthy: ${r.postedJournalCount} posted journals reconciled (Debits == Credits).'
+                                          : 'Reconciliation warning: check diagnostics.',
+                                    ),
                                   ),
-                                ),
+                                );
+                              },
+                      ),
+                      Divider(height: 1, color: cfo.divider),
+                      FintechSettingRow(
+                        icon: Icons.bug_report_outlined,
+                        iconColor: cfo.transfer,
+                        iconBackground: cfo.transferContainer,
+                        title: 'Copy Support Diagnostics',
+                        subtitle: 'Redacted logs without amounts or keys',
+                        onTap: () async {
+                          final supportId = GetIt.I<IdGenerator>().nextUuid();
+                          final bundle = GetIt.I<RedactingLogger>()
+                              .exportSupportDiagnostics(
+                                appVersion: env.appVersion,
+                                platform: 'flutter',
+                                supportCorrelationId: supportId,
                               );
-                            },
-                    ),
-                    Divider(height: 1, color: cfo.divider),
-                    FintechSettingRow(
-                      icon: Icons.bug_report_outlined,
-                      iconColor: cfo.transfer,
-                      iconBackground: cfo.transferContainer,
-                      title: 'Copy Support Diagnostics',
-                      subtitle: 'Redacted logs without amounts or keys',
-                      onTap: () async {
-                        final supportId = GetIt.I<IdGenerator>().nextUuid();
-                        final bundle = GetIt.I<RedactingLogger>()
-                            .exportSupportDiagnostics(
-                              appVersion: env.appVersion,
-                              platform: 'flutter',
-                              supportCorrelationId: supportId,
-                            );
-                        await Clipboard.setData(ClipboardData(text: bundle));
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              behavior: SnackBarBehavior.floating,
-                              content: Text(
-                                'Redacted diagnostics copied (Support ID: ${supportId.substring(0, 8)}).',
+                          await Clipboard.setData(ClipboardData(text: bundle));
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                behavior: SnackBarBehavior.floating,
+                                content: Text(
+                                  'Redacted diagnostics copied (Support ID: ${supportId.substring(0, 8)}).',
+                                ),
                               ),
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                    Divider(height: 1, color: cfo.divider),
-                    FintechSettingRow(
-                      icon: Icons.backup_outlined,
-                      iconColor: scheme.primary,
-                      iconBackground: scheme.primaryContainer,
-                      title: 'Encrypted Backup (.pcfo)',
-                      subtitle: 'Export or restore local vault archive',
-                      onTap: () => context.push('/backup'),
-                    ),
-                    Divider(height: 1, color: cfo.divider),
-                    FintechSettingRow(
-                      key: const Key('settings_replay_onboarding_tile'),
-                      icon: Icons.auto_awesome_rounded,
-                      iconColor: scheme.primary,
-                      iconBackground: scheme.primaryContainer,
-                      title: 'App Walkthrough Tour',
-                      subtitle: 'Revisit vaults, ledger, budgets & privacy',
-                      onTap: () => context.push('/onboarding?replay=true'),
-                    ),
-                  ],
+                            );
+                          }
+                        },
+                      ),
+                      Divider(height: 1, color: cfo.divider),
+                      FintechSettingRow(
+                        icon: Icons.backup_outlined,
+                        iconColor: scheme.primary,
+                        iconBackground: scheme.primaryContainer,
+                        title: 'Encrypted Backup (.pcfo)',
+                        subtitle: 'Export or restore local vault archive',
+                        onTap: () => context.push('/backup'),
+                      ),
+                      Divider(height: 1, color: cfo.divider),
+                      FintechSettingRow(
+                        key: const Key('settings_replay_onboarding_tile'),
+                        icon: Icons.auto_awesome_rounded,
+                        iconColor: scheme.primary,
+                        iconBackground: scheme.primaryContainer,
+                        title: 'App Walkthrough Tour',
+                        subtitle: 'Revisit vaults, ledger, budgets & privacy',
+                        onTap: () => context.push('/onboarding?replay=true'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),

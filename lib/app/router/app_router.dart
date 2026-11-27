@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/theme/app_tokens.dart';
 import '../../features/accounts/presentation/pages/accounts_page.dart';
+import '../../features/ai_coach/presentation/pages/ai_coach_page.dart';
 import '../../features/analytics/presentation/pages/analytics_reports_page.dart';
 import '../../features/authentication/presentation/bloc/auth_cubit.dart';
 import '../../features/authentication/presentation/pages/welcome_auth_page.dart';
@@ -13,7 +14,9 @@ import '../../features/budgets/presentation/pages/budgets_page.dart';
 import '../../features/categories/presentation/pages/categories_page.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/import_export/presentation/pages/csv_import_page.dart';
+import '../../features/life_planner/presentation/pages/life_stage_planner_page.dart';
 import '../../features/loans/presentation/pages/loans_page.dart';
+import '../../features/monthly_tracker/presentation/pages/monthly_tracker_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/profiles/presentation/bloc/active_profile_cubit.dart';
 import '../../features/profiles/presentation/pages/profile_hub_page.dart';
@@ -54,25 +57,70 @@ CustomTransitionPage<void> _buildTransitionPage(
   GoRouterState state,
   Widget child,
 ) {
-  final duration = AppMotion.resolve(context, AppMotion.standard);
+  final duration = AppMotion.resolve(context, AppMotion.page);
+  final reverseDuration = AppMotion.resolve(context, AppMotion.pageReverse);
   return CustomTransitionPage<void>(
     key: state.pageKey,
     transitionDuration: duration,
-    reverseTransitionDuration: AppMotion.resolve(context, AppMotion.fast),
+    reverseTransitionDuration: reverseDuration,
+    child: child,
+    transitionsBuilder: (ctx, animation, secondaryAnimation, pageChild) {
+      if (duration == Duration.zero) return pageChild;
+      final enterCurve = CurvedAnimation(
+        parent: animation,
+        curve: AppMotion.curveEmphasized,
+        reverseCurve: AppMotion.curveExit,
+      );
+      final exitCurve = CurvedAnimation(
+        parent: secondaryAnimation,
+        curve: AppMotion.curveEmphasized,
+      );
+      return SlideTransition(
+        position: Tween<Offset>(
+          begin: Offset.zero,
+          end: const Offset(-0.025, 0),
+        ).animate(exitCurve),
+        child: ScaleTransition(
+          scale: Tween<double>(begin: 1.0, end: 0.985).animate(exitCurve),
+          child: FadeTransition(
+            opacity: enterCurve,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0.055, 0),
+                end: Offset.zero,
+              ).animate(enterCurve),
+              child: pageChild,
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+CustomTransitionPage<void> _buildFadeScalePage(
+  BuildContext context,
+  GoRouterState state,
+  Widget child,
+) {
+  final duration = AppMotion.resolve(context, AppMotion.standard);
+  final reverseDuration = AppMotion.resolve(context, AppMotion.fast);
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    transitionDuration: duration,
+    reverseTransitionDuration: reverseDuration,
     child: child,
     transitionsBuilder: (ctx, animation, _, pageChild) {
       if (duration == Duration.zero) return pageChild;
       final curved = CurvedAnimation(
         parent: animation,
-        curve: Curves.easeOutCubic,
+        curve: AppMotion.curveEmphasized,
+        reverseCurve: AppMotion.curveExit,
       );
       return FadeTransition(
         opacity: curved,
-        child: SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.03),
-            end: Offset.zero,
-          ).animate(curved),
+        child: ScaleTransition(
+          scale: Tween<double>(begin: 0.97, end: 1.0).animate(curved),
           child: pageChild,
         ),
       );
@@ -149,11 +197,23 @@ GoRouter buildAppRouter({
           ),
         ),
       ),
-      GoRoute(path: '/welcome', builder: (_, _) => const WelcomeAuthPage()),
-      GoRoute(path: '/lock', builder: (_, _) => const AppLockGateScreen()),
+      GoRoute(
+        path: '/welcome',
+        pageBuilder: (ctx, state) =>
+            _buildFadeScalePage(ctx, state, const WelcomeAuthPage()),
+      ),
+      GoRoute(
+        path: '/lock',
+        pageBuilder: (ctx, state) =>
+            _buildFadeScalePage(ctx, state, const AppLockGateScreen()),
+      ),
       GoRoute(
         path: '/setup-profile',
-        builder: (_, _) => const ProfilesPage(isInitialSetup: true),
+        pageBuilder: (ctx, state) => _buildFadeScalePage(
+          ctx,
+          state,
+          const ProfilesPage(isInitialSetup: true),
+        ),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
@@ -213,8 +273,11 @@ GoRouter buildAppRouter({
       ),
       GoRoute(
         path: '/budgets',
-        pageBuilder: (ctx, state) =>
-            _buildTransitionPage(ctx, state, const BudgetsPage()),
+        pageBuilder: (ctx, state) {
+          final tab =
+              int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0;
+          return _buildTransitionPage(ctx, state, BudgetsPage(initialTab: tab));
+        },
       ),
       GoRoute(
         path: '/goals',
@@ -267,6 +330,38 @@ GoRouter buildAppRouter({
         path: '/settings',
         pageBuilder: (ctx, state) =>
             _buildTransitionPage(ctx, state, const SettingsPage()),
+      ),
+      GoRoute(
+        path: '/coach',
+        pageBuilder: (ctx, state) {
+          final tab =
+              int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0;
+          return _buildTransitionPage(ctx, state, AiCoachPage(initialTab: tab));
+        },
+      ),
+      GoRoute(
+        path: '/life-planner',
+        pageBuilder: (ctx, state) {
+          final tab =
+              int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0;
+          return _buildTransitionPage(
+            ctx,
+            state,
+            LifeStagePlannerPage(initialTab: tab),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/monthly',
+        pageBuilder: (ctx, state) {
+          final tab =
+              int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0;
+          return _buildTransitionPage(
+            ctx,
+            state,
+            MonthlyTrackerPage(initialTab: tab),
+          );
+        },
       ),
     ],
   );

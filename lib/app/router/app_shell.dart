@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -88,12 +89,12 @@ class _AppShellState extends State<AppShell>
     _lastBranchIndex = widget.navigationShell.currentIndex;
     _tabAnimCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 175),
+      duration: AppMotion.standard,
       value: 1.0,
     );
     _tabAnimCurve = CurvedAnimation(
       parent: _tabAnimCtrl,
-      curve: Curves.easeOutCubic,
+      curve: AppMotion.curveEmphasized,
     );
   }
 
@@ -175,6 +176,7 @@ class _AppShellState extends State<AppShell>
     Widget child, {
     required FinancialProfile? activeProfile,
     required bool showQuickBall,
+    double quickBallBottomClearance = 16.0,
   }) {
     final disableAnim = MediaQuery.disableAnimationsOf(context);
 
@@ -186,9 +188,9 @@ class _AppShellState extends State<AppShell>
             builder: (_, inner) {
               final t = _tabAnimCurve.value;
               return Opacity(
-                opacity: (0.76 + 0.24 * t).clamp(0.0, 1.0),
+                opacity: (0.85 + 0.15 * t).clamp(0.0, 1.0),
                 child: Transform.translate(
-                  offset: Offset((1.0 - t) * 14.0 * _slideDirection, 0),
+                  offset: Offset((1.0 - t) * 16.0 * _slideDirection, 0),
                   child: inner,
                 ),
               );
@@ -201,7 +203,12 @@ class _AppShellState extends State<AppShell>
         if (showQuickBall &&
             activeProfile != null &&
             activeProfile.permissions.canPostTransaction)
-          Positioned.fill(child: DraggableQuickBall(profile: activeProfile)),
+          Positioned.fill(
+            child: DraggableQuickBall(
+              profile: activeProfile,
+              bottomClearance: quickBallBottomClearance,
+            ),
+          ),
         Positioned(
           top: 10,
           left: 16,
@@ -278,28 +285,42 @@ class _AppShellState extends State<AppShell>
                         child: Row(
                           children: [
                             Expanded(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
+                              child: AnimatedSwitcher(
+                                duration: AppMotion.resolve(
+                                  context,
+                                  AppMotion.fast,
+                                ),
+                                switchInCurve: AppMotion.curveEmphasized,
+                                child: Align(
+                                  key: ValueKey<String>(
                                     currentDest.headerTitle,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.titleMedium,
                                   ),
-                                  Text(
-                                    currentDest.headerSubtitle,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelSmall
-                                        ?.copyWith(color: cfo.subtleText),
+                                  alignment: Alignment.centerLeft,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        currentDest.headerTitle,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.titleMedium,
+                                      ),
+                                      Text(
+                                        currentDest.headerSubtitle,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelSmall
+                                            ?.copyWith(color: cfo.subtleText),
+                                      ),
+                                    ],
                                   ),
-                                ],
+                                ),
                               ),
                             ),
                             const SizedBox(width: AppSpacing.md),
@@ -404,97 +425,147 @@ class _AppShellState extends State<AppShell>
           );
         }
 
+        final isDark = Theme.of(context).brightness == Brightness.dark;
         return Scaffold(
           appBar: appBar,
           body: _wrapBodyWithToast(
             navShell,
             activeProfile: activeProfile,
             showQuickBall: navShell.currentIndex == 0,
+            quickBallBottomClearance: 16.0,
           ),
-          bottomNavigationBar: Container(
-            decoration: BoxDecoration(
-              color: cfo.surfaceElevated,
-              border: Border(top: BorderSide(color: cfo.divider)),
-              boxShadow: [
-                BoxShadow(
-                  color: cfo.cardShadow,
-                  blurRadius: 16,
-                  offset: const Offset(0, -4),
+          bottomNavigationBar: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(14, 4, 14, 9),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(
+                        0xFF090A0D,
+                      ).withValues(alpha: isDark ? 0.50 : 0.16),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: SafeArea(
-              top: false,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 64),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 6,
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: _DockNavItem(
-                          icon: AppShell._destinations[0].icon,
-                          selectedIcon: AppShell._destinations[0].selectedIcon,
-                          label: AppShell._destinations[0].label,
-                          selected: navShell.currentIndex == 0,
-                          onTap: () => _selectBranch(0),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(28),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: isDark
+                              ? [
+                                  const Color(
+                                    0xFF0D1B38,
+                                  ).withValues(alpha: 0.96),
+                                  const Color(
+                                    0xFF081126,
+                                  ).withValues(alpha: 0.98),
+                                ]
+                              : [
+                                  const Color(
+                                    0xFF091632,
+                                  ).withValues(alpha: 0.97),
+                                  const Color(
+                                    0xFF122857,
+                                  ).withValues(alpha: 0.98),
+                                ],
+                        ),
+                        borderRadius: BorderRadius.circular(28),
+                        border: Border.all(
+                          color: const Color(
+                            0xFFE5C169,
+                          ).withValues(alpha: isDark ? 0.28 : 0.24),
+                          width: 1.0,
                         ),
                       ),
-                      Expanded(
-                        child: _DockNavItem(
-                          icon: AppShell._destinations[1].icon,
-                          selectedIcon: AppShell._destinations[1].selectedIcon,
-                          label: AppShell._destinations[1].label,
-                          selected: navShell.currentIndex == 1,
-                          onTap: () => _selectBranch(1),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(minHeight: 62),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 6,
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: _DockNavItem(
+                                  icon: AppShell._destinations[0].icon,
+                                  selectedIcon:
+                                      AppShell._destinations[0].selectedIcon,
+                                  label: AppShell._destinations[0].label,
+                                  selected: navShell.currentIndex == 0,
+                                  onTap: () => _selectBranch(0),
+                                ),
+                              ),
+                              Expanded(
+                                child: _DockNavItem(
+                                  icon: AppShell._destinations[1].icon,
+                                  selectedIcon:
+                                      AppShell._destinations[1].selectedIcon,
+                                  label: AppShell._destinations[1].label,
+                                  selected: navShell.currentIndex == 1,
+                                  onTap: () => _selectBranch(1),
+                                ),
+                              ),
+                              Expanded(
+                                child: _DockNavItem(
+                                  icon: AppShell._destinations[2].icon,
+                                  selectedIcon:
+                                      AppShell._destinations[2].selectedIcon,
+                                  label: AppShell._destinations[2].label,
+                                  selected: navShell.currentIndex == 2,
+                                  onTap: () => _selectBranch(2),
+                                ),
+                              ),
+                              Expanded(
+                                child: _DockNavItem(
+                                  icon: AppShell._destinations[3].icon,
+                                  selectedIcon:
+                                      AppShell._destinations[3].selectedIcon,
+                                  label: AppShell._destinations[3].label,
+                                  selected: navShell.currentIndex == 3,
+                                  onTap: () => _selectBranch(3),
+                                ),
+                              ),
+                              Expanded(
+                                child: _InstagramProfileDockItem(
+                                  key: const Key('bottom_nav_profile_switcher'),
+                                  activeProfile: activeProfile,
+                                  hasMultipleProfiles: profiles.length > 1,
+                                  selected: navShell.currentIndex == 4,
+                                  onTap: () => _selectBranch(4),
+                                  onQuickCycleSwitch: (reverse) =>
+                                      _handleGestureCycleProfile(
+                                        reverse: reverse,
+                                      ),
+                                  onLongPressOpenSwitcher: () {
+                                    if (activeProfile != null) {
+                                      HapticFeedback.selectionClick();
+                                      _openInstagramBottomSwitcher(
+                                        context,
+                                        profiles,
+                                        activeProfile,
+                                      );
+                                    } else {
+                                      _selectBranch(4);
+                                    }
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      Expanded(
-                        child: _DockNavItem(
-                          icon: AppShell._destinations[2].icon,
-                          selectedIcon: AppShell._destinations[2].selectedIcon,
-                          label: AppShell._destinations[2].label,
-                          selected: navShell.currentIndex == 2,
-                          onTap: () => _selectBranch(2),
-                        ),
-                      ),
-                      Expanded(
-                        child: _DockNavItem(
-                          icon: AppShell._destinations[3].icon,
-                          selectedIcon: AppShell._destinations[3].selectedIcon,
-                          label: AppShell._destinations[3].label,
-                          selected: navShell.currentIndex == 3,
-                          onTap: () => _selectBranch(3),
-                        ),
-                      ),
-                      Expanded(
-                        child: _InstagramProfileDockItem(
-                          key: const Key('bottom_nav_profile_switcher'),
-                          activeProfile: activeProfile,
-                          hasMultipleProfiles: profiles.length > 1,
-                          selected: navShell.currentIndex == 4,
-                          onTap: () => _selectBranch(4),
-                          onQuickCycleSwitch: (reverse) =>
-                              _handleGestureCycleProfile(reverse: reverse),
-                          onLongPressOpenSwitcher: () {
-                            if (activeProfile != null) {
-                              HapticFeedback.selectionClick();
-                              _openInstagramBottomSwitcher(
-                                context,
-                                profiles,
-                                activeProfile,
-                              );
-                            } else {
-                              _selectBranch(4);
-                            }
-                          },
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -514,19 +585,16 @@ class _AppShellState extends State<AppShell>
     required bool hideBalances,
     required bool isTablet,
   }) {
-    final cfo = context.cfoColors;
-    final actionSize = isTablet ? 40.0 : 36.0;
-    final iconSize = isTablet ? 21.0 : 20.0;
+    final actionSize = isTablet ? 40.0 : 38.0;
+    final iconSize = isTablet ? 21.0 : 19.5;
 
     return AppBar(
       toolbarHeight: 62,
-      backgroundColor: cfo.surfaceElevated,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       surfaceTintColor: Colors.transparent,
       titleSpacing: AppSpacing.md,
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(1),
-        child: Divider(height: 1, thickness: 1, color: cfo.divider),
-      ),
       title: activeProfile != null
           ? _PlayStoreProfileAppBarHeader(
               key: const Key('appbar_profile_switcher'),
@@ -561,7 +629,7 @@ class _AppShellState extends State<AppShell>
               ? Icons.visibility_off_outlined
               : Icons.visibility_outlined,
         ),
-        const SizedBox(width: 2),
+        const SizedBox(width: 8),
         BlocSelector<NotificationsCubit, NotificationsState, int>(
           selector: (s) => s.unreadCount,
           builder: (context, unreadCount) => AnimatedNotificationBell(
@@ -572,7 +640,7 @@ class _AppShellState extends State<AppShell>
           ),
         ),
         if (isTablet) ...[
-          const SizedBox(width: 2),
+          const SizedBox(width: 8),
           _HeaderActionButton(
             size: actionSize,
             iconSize: iconSize,
@@ -581,7 +649,7 @@ class _AppShellState extends State<AppShell>
             icon: Icons.tune_rounded,
           ),
         ],
-        const SizedBox(width: AppSpacing.xs),
+        const SizedBox(width: AppSpacing.md),
       ],
     );
   }
@@ -1566,7 +1634,9 @@ class _InstagramProfileDockItemState extends State<_InstagramProfileDockItem>
                     'Profile',
                     maxLines: 1,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: widget.selected ? scheme.primary : cfo.subtleText,
+                      color: widget.selected
+                          ? Colors.white
+                          : Colors.white.withValues(alpha: 0.56),
                       fontWeight: widget.selected
                           ? FontWeight.w700
                           : FontWeight.w500,
@@ -1600,14 +1670,31 @@ class _HeaderActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      tooltip: tooltip,
-      onPressed: onPressed,
-      padding: EdgeInsets.zero,
-      constraints: BoxConstraints.tightFor(width: size, height: size),
-      visualDensity: VisualDensity.compact,
-      iconSize: iconSize,
-      icon: Icon(icon),
+    final cfo = context.cfoColors;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: cfo.surfaceElevated,
+        shape: BoxShape.circle,
+        border: Border.all(color: cfo.divider.withValues(alpha: 0.9)),
+        boxShadow: [
+          BoxShadow(
+            color: cfo.cardShadow,
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: IconButton(
+        tooltip: tooltip,
+        onPressed: onPressed,
+        padding: EdgeInsets.zero,
+        constraints: BoxConstraints.tightFor(width: size, height: size),
+        visualDensity: VisualDensity.compact,
+        iconSize: iconSize,
+        icon: Icon(icon),
+      ),
     );
   }
 }
@@ -1866,42 +1953,55 @@ class _SidebarNavTileState extends State<_SidebarNavTile> {
         ? scheme.primaryContainer
         : (_hovered ? cfo.surfaceTonal : Colors.transparent);
     final fg = widget.selected ? scheme.primary : scheme.onSurfaceVariant;
+    final duration = AppMotion.resolve(context, AppMotion.fast);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 1.5),
-      child: Material(
-        color: bg,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        child: InkWell(
+      child: AnimatedContainer(
+        duration: duration,
+        curve: AppMotion.curveStandard,
+        decoration: BoxDecoration(
+          color: bg,
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          onTap: widget.onTap,
-          onHover: (v) {
-            if (_hovered != v) setState(() => _hovered = v);
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: Row(
-              children: [
-                Icon(
-                  widget.selected ? widget.selectedIcon : widget.icon,
-                  size: 20,
-                  color: fg,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    widget.label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: widget.selected ? scheme.onPrimaryContainer : fg,
-                      fontWeight: widget.selected
-                          ? FontWeight.w700
-                          : FontWeight.w500,
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            onTap: widget.onTap,
+            onHover: (v) {
+              if (_hovered != v) setState(() => _hovered = v);
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: Row(
+                children: [
+                  AnimatedSwitcher(
+                    duration: duration,
+                    child: Icon(
+                      widget.selected ? widget.selectedIcon : widget.icon,
+                      key: ValueKey<bool>(widget.selected),
+                      size: 20,
+                      color: fg,
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      widget.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: widget.selected ? scheme.onPrimaryContainer : fg,
+                        fontWeight: widget.selected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -1931,12 +2031,12 @@ class _DockNavItem extends StatefulWidget {
 
 class _DockNavItemState extends State<_DockNavItem> {
   bool _hovered = false;
+  bool _pressed = false;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final cfo = context.cfoColors;
     final duration = AppMotion.resolve(context, AppMotion.fast);
+    final muted = Colors.white.withValues(alpha: 0.58);
 
     return Semantics(
       selected: widget.selected,
@@ -1945,6 +2045,9 @@ class _DockNavItemState extends State<_DockNavItem> {
       child: ExcludeSemantics(
         child: InkWell(
           onTap: widget.onTap,
+          onTapDown: (_) => setState(() => _pressed = true),
+          onTapUp: (_) => setState(() => _pressed = false),
+          onTapCancel: () => setState(() => _pressed = false),
           onHover: (v) {
             if (_hovered != v) setState(() => _hovered = v);
           },
@@ -1955,26 +2058,49 @@ class _DockNavItemState extends State<_DockNavItem> {
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                AnimatedContainer(
+                AnimatedScale(
+                  scale: _pressed ? 0.92 : (widget.selected ? 1.05 : 1.0),
                   duration: duration,
-                  curve: Curves.easeOut,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: widget.selected
-                        ? scheme.primaryContainer
-                        : (_hovered ? cfo.surfaceTonal : Colors.transparent),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                  ),
-                  child: Icon(
-                    widget.selected ? widget.selectedIcon : widget.icon,
-                    size: 21,
-                    color: widget.selected ? scheme.primary : cfo.subtleText,
+                  curve: AppMotion.curveSpring,
+                  child: AnimatedContainer(
+                    duration: duration,
+                    curve: AppMotion.curveSpring,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4.5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: widget.selected
+                          ? const Color(0xFFE5C169).withValues(alpha: 0.18)
+                          : (_hovered
+                                ? Colors.white.withValues(alpha: 0.08)
+                                : Colors.transparent),
+                      borderRadius: BorderRadius.circular(
+                        AppSpacing.radiusFull,
+                      ),
+                      border: widget.selected
+                          ? Border.all(
+                              color: const Color(
+                                0xFFE5C169,
+                              ).withValues(alpha: 0.44),
+                              width: 0.95,
+                            )
+                          : null,
+                    ),
+                    child: AnimatedSwitcher(
+                      duration: duration,
+                      child: Icon(
+                        widget.selected ? widget.selectedIcon : widget.icon,
+                        key: ValueKey<bool>(widget.selected),
+                        size: 20,
+                        color: widget.selected
+                            ? const Color(0xFFF3D686)
+                            : muted,
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 2.5),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 2),
                   child: FittedBox(
@@ -1984,12 +2110,13 @@ class _DockNavItemState extends State<_DockNavItem> {
                       maxLines: 1,
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         color: widget.selected
-                            ? scheme.primary
-                            : cfo.subtleText,
+                            ? const Color(0xFFF6E2A8)
+                            : muted,
                         fontWeight: widget.selected
-                            ? FontWeight.w700
+                            ? FontWeight.w800
                             : FontWeight.w500,
                         fontSize: 10.5,
+                        letterSpacing: widget.selected ? 0.1 : 0,
                       ),
                     ),
                   ),

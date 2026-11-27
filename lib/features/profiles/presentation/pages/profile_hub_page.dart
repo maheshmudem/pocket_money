@@ -7,10 +7,11 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/config/environment_config.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/financial_engine/money.dart';
+import '../../../../shared/widgets/editorial_bento_kit.dart';
 import '../../../../shared/widgets/enterprise_layout.dart';
 import '../../../../shared/widgets/fintech_widgets.dart';
+import '../../../../shared/widgets/flagship_visuals.dart';
 import '../../../../shared/widgets/modern_dialogs.dart';
-import '../../../../shared/widgets/modern_inputs.dart';
 import '../../../../shared/widgets/profile_avatar.dart';
 import '../../../authentication/presentation/bloc/auth_cubit.dart';
 import '../../../budgets/presentation/pages/budgets_page.dart';
@@ -153,7 +154,7 @@ class _ProfileHubPageState extends State<ProfileHubPage> {
     };
 
     return SingleChildScrollView(
-      padding: EnterprisePageContainer.responsivePadding(context, bottom: 40),
+      padding: EnterprisePageContainer.responsivePadding(context, bottom: 44),
       child: EnterprisePageContainer(
         maxWidth: AppBreakpoints.maxContentWidth,
         child: Column(
@@ -168,7 +169,7 @@ class _ProfileHubPageState extends State<ProfileHubPage> {
                 accountsCount: accountsCount,
                 budgetsCount: budgets.length,
                 members: activeMembers,
-                onRename: () => _openRenameDialog(context, activeProfile),
+                onEdit: () => openEditProfileModal(context, activeProfile),
                 onOpenMembers: () => openProfileMembersModal(
                   context,
                   activeProfile,
@@ -212,15 +213,8 @@ class _ProfileHubPageState extends State<ProfileHubPage> {
             // 3. Interactive Live Financial Snapshot
             StaggeredFadeSlide(
               index: 2,
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final fourCols =
-                      constraints.maxWidth >= AppBreakpoints.medium;
-                  final cols = fourCols ? 4 : 2;
-                  const gap = AppSpacing.sm;
-                  final tileWidth =
-                      (constraints.maxWidth - (gap * (cols - 1))) / cols;
-
+              child: Builder(
+                builder: (context) {
                   final metrics = [
                     (
                       label: 'Net Worth',
@@ -260,65 +254,83 @@ class _ProfileHubPageState extends State<ProfileHubPage> {
                     ),
                   ];
 
-                  return Wrap(
-                    spacing: gap,
-                    runSpacing: gap,
-                    children: [
-                      for (final m in metrics)
-                        SizedBox(
-                          width: tileWidth,
-                          child: PressScaleCard(
-                            onTap: () => context.go(m.route),
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    IconSquircle(
-                                      icon: m.icon,
-                                      iconColor: m.fg,
-                                      backgroundColor: m.bg,
-                                      size: 30,
-                                    ),
-                                    const SizedBox(width: AppSpacing.xs),
-                                    Expanded(
-                                      child: Text(
-                                        m.label,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .labelMedium
-                                            ?.copyWith(color: cfo.subtleText),
-                                      ),
-                                    ),
-                                    Icon(
-                                      Icons.arrow_forward_ios_rounded,
-                                      size: 11,
-                                      color: cfo.subtleText,
-                                    ),
-                                  ],
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: cfo.surfaceElevated,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: cfo.divider),
+                    ),
+                    child: Column(
+                      children: [
+                        IntrinsicHeight(
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: _CompactVaultMetricCell(
+                                  label: metrics[0].label,
+                                  money: metrics[0].money,
+                                  masked: settings.hideBalances,
+                                  icon: metrics[0].icon,
+                                  color: metrics[0].fg,
+                                  onTap: () => context.go(metrics[0].route),
                                 ),
-                                const SizedBox(height: 8),
-                                FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  alignment: Alignment.centerLeft,
-                                  child: AnimatedMoneyText(
-                                    money: m.money,
-                                    masked: settings.hideBalances,
-                                    semanticKind: m.kind,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleMedium
-                                        ?.copyWith(fontWeight: FontWeight.w800),
-                                  ),
+                              ),
+                              VerticalDivider(
+                                width: 20,
+                                thickness: 1,
+                                color: cfo.divider,
+                              ),
+                              Expanded(
+                                child: _CompactVaultMetricCell(
+                                  label: metrics[1].label,
+                                  money: metrics[1].money,
+                                  masked: settings.hideBalances,
+                                  icon: metrics[1].icon,
+                                  color: metrics[1].fg,
+                                  onTap: () => context.go(metrics[1].route),
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
-                    ],
+                        Divider(height: 18, color: cfo.divider),
+                        IntrinsicHeight(
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: _CompactVaultMetricCell(
+                                  label: metrics[2].label,
+                                  money: metrics[2].money,
+                                  masked: settings.hideBalances,
+                                  icon: metrics[2].icon,
+                                  color: metrics[2].fg,
+                                  onTap: () => context.go(metrics[2].route),
+                                ),
+                              ),
+                              VerticalDivider(
+                                width: 20,
+                                thickness: 1,
+                                color: cfo.divider,
+                              ),
+                              Expanded(
+                                child: _CompactVaultMetricCell(
+                                  label: metrics[3].label,
+                                  money: metrics[3].money,
+                                  masked: settings.hideBalances,
+                                  icon: metrics[3].icon,
+                                  color: metrics[3].fg,
+                                  onTap: () => context.go(metrics[3].route),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   );
                 },
               ),
@@ -346,6 +358,10 @@ class _ProfileHubPageState extends State<ProfileHubPage> {
                       _VaultRosterRow(
                         profile: profiles[i],
                         isSelected: profiles[i].id == activeProfile.id,
+                        onEdit:
+                            profiles[i].permissions.canChangeSettingsOrCurrency
+                            ? () => openEditProfileModal(context, profiles[i])
+                            : null,
                         onTap: () {
                           HapticFeedback.selectionClick();
                           context.read<ActiveProfileCubit>().switchProfile(
@@ -397,6 +413,62 @@ class _ProfileHubPageState extends State<ProfileHubPage> {
             const SizedBox(height: AppSpacing.xs),
             StaggeredFadeSlide(
               index: 4,
+              child: PressScaleCard(
+                padding: EdgeInsets.zero,
+                child: Column(
+                  children: [
+                    FintechSettingRow(
+                      key: const Key('profile_open_coach_tile'),
+                      icon: Icons.auto_awesome_rounded,
+                      iconColor: scheme.primary,
+                      iconBackground: scheme.primaryContainer,
+                      title: 'Smart CFO Coach',
+                      subtitle: 'Monthly spend audit, smart budgets & AI Q&A',
+                      trailing: FintechStatusPill(
+                        label: 'FREE AI',
+                        foreground: cfo.income,
+                        background: cfo.incomeContainer,
+                      ),
+                      onTap: () => context.push('/coach'),
+                    ),
+                    Divider(height: 1, color: cfo.divider),
+                    FintechSettingRow(
+                      key: const Key('profile_open_life_planner_tile'),
+                      icon: Icons.family_restroom_rounded,
+                      iconColor: cfo.income,
+                      iconBackground: cfo.incomeContainer,
+                      title: 'Life & EMI Planner',
+                      subtitle: 'Bachelor, Family & EMI payoff simulator',
+                      trailing: FintechStatusPill(
+                        label: 'STATUS',
+                        foreground: scheme.primary,
+                        background: scheme.primaryContainer,
+                      ),
+                      onTap: () => context.push('/life-planner'),
+                    ),
+                    Divider(height: 1, color: cfo.divider),
+                    FintechSettingRow(
+                      key: const Key('profile_open_monthly_tile'),
+                      icon: Icons.calendar_month_rounded,
+                      iconColor: scheme.primary,
+                      iconBackground: scheme.primaryContainer,
+                      title: 'Monthly Tracker & Bucket List',
+                      subtitle:
+                          'Net savings, purchase planner & extra income split',
+                      trailing: FintechStatusPill(
+                        label: 'NEW',
+                        foreground: cfo.income,
+                        background: cfo.incomeContainer,
+                      ),
+                      onTap: () => context.push('/monthly'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            StaggeredFadeSlide(
+              index: 5,
               child: _FinanceSectionsGrid(
                 cfo: cfo,
                 scheme: scheme,
@@ -530,17 +602,6 @@ class _ProfileHubPageState extends State<ProfileHubPage> {
     );
   }
 
-  Future<void> _openRenameDialog(
-    BuildContext context,
-    FinancialProfile profile,
-  ) async {
-    await showModernDialog<void>(
-      context: context,
-      builder: (_) =>
-          _RenameProfileDialog(profile: profile, parentCtx: context),
-    );
-  }
-
   Future<void> _confirmLogout(
     BuildContext context, {
     required bool isLocalSession,
@@ -571,7 +632,7 @@ class _ProfileIdentityHeroCard extends StatefulWidget {
     required this.accountsCount,
     required this.budgetsCount,
     required this.members,
-    required this.onRename,
+    required this.onEdit,
     required this.onOpenMembers,
     required this.onAddMember,
   });
@@ -581,7 +642,7 @@ class _ProfileIdentityHeroCard extends StatefulWidget {
   final int accountsCount;
   final int budgetsCount;
   final List<ProfileMember> members;
-  final VoidCallback onRename;
+  final VoidCallback onEdit;
   final VoidCallback onOpenMembers;
   final VoidCallback onAddMember;
 
@@ -595,9 +656,6 @@ class _ProfileIdentityHeroCardState extends State<_ProfileIdentityHeroCard> {
 
   @override
   Widget build(BuildContext context) {
-    final cfo = context.cfoColors;
-    final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final profile = widget.activeProfile;
     final effectiveMembers = widget.members.isNotEmpty
         ? widget.members
@@ -613,218 +671,215 @@ class _ProfileIdentityHeroCardState extends State<_ProfileIdentityHeroCard> {
             ),
           ];
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        boxShadow: [
-          BoxShadow(
-            color: cfo.cardShadow,
-            blurRadius: 18,
-            offset: const Offset(0, 6),
-          ),
-        ],
+    return FintechSignatureHero(
+      tone: SignatureHeroTone.violet,
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 15),
+      bottomBar: _FamilyMembersHeroDock(
+        members: effectiveMembers,
+        canManageMembers: profile.permissions.canManageMembers,
+        onTapMembers: widget.onOpenMembers,
+        onAddMember: widget.onAddMember,
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        child: Material(
-          color: cfo.surfaceElevated,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-            side: BorderSide(color: cfo.divider),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          GestureDetector(
+            onVerticalDragUpdate: (d) {
+              setState(() {
+                _dragDy = (_dragDy + d.delta.dy * 0.5).clamp(-18.0, 22.0);
+              });
+            },
+            onVerticalDragEnd: (d) async {
+              final raw = _dragDy;
+              final vy = d.primaryVelocity ?? 0;
+              setState(() => _dragDy = 0);
+              if (raw.abs() >= 14 || vy.abs() >= 200) {
+                if (widget.profilesCount > 1) {
+                  HapticFeedback.mediumImpact();
+                  final isDown = raw >= 0 && vy >= -180;
+                  await context.read<ActiveProfileCubit>().cycleNextProfile(
+                    reverse: !isDown,
+                  );
+                }
+              }
+            },
+            onVerticalDragCancel: () => setState(() => _dragDy = 0),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 140),
+              curve: Curves.easeOutBack,
+              transform: Matrix4.translationValues(0, _dragDy, 0),
+              child: ProfileAvatar(
+                profile: profile,
+                size: 56,
+                selectedRing: true,
+                showTypeBadge: true,
+              ),
+            ),
           ),
-          child: Stack(
-            children: [
-              // Subtle top-right ambient tint matching the active Light/Dark theme
-              Positioned(
-                right: -46,
-                top: -46,
-                child: IgnorePointer(
-                  child: Container(
-                    width: 156,
-                    height: 156,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          scheme.primary.withValues(
-                            alpha: isDark ? 0.16 : 0.08,
+          const SizedBox(width: AppSpacing.sm + 2),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'PRIVATE WEALTH VAULT',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: const Color(0xFFF0CF7E),
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 9.5,
+                                  letterSpacing: 1.35,
+                                ),
                           ),
-                          scheme.primary.withValues(alpha: 0.0),
+                          const SizedBox(height: 2),
+                          Text(
+                            profile.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 21,
+                                ),
+                          ),
                         ],
                       ),
                     ),
-                  ),
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Delicate 3px brand accent edge
-                  Container(
-                    height: 3,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [cfo.heroGradientEnd, cfo.accentCyan],
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.md,
-                      AppSpacing.md,
-                      AppSpacing.md,
-                      14,
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        GestureDetector(
-                          onVerticalDragUpdate: (d) {
-                            setState(() {
-                              _dragDy = (_dragDy + d.delta.dy * 0.5).clamp(
-                                -18.0,
-                                22.0,
-                              );
-                            });
-                          },
-                          onVerticalDragEnd: (d) async {
-                            final raw = _dragDy;
-                            final vy = d.primaryVelocity ?? 0;
-                            setState(() => _dragDy = 0);
-                            if (raw.abs() >= 14 || vy.abs() >= 200) {
-                              if (widget.profilesCount > 1) {
-                                HapticFeedback.mediumImpact();
-                                final isDown = raw >= 0 && vy >= -180;
-                                await context
-                                    .read<ActiveProfileCubit>()
-                                    .cycleNextProfile(reverse: !isDown);
-                              }
-                            }
-                          },
-                          onVerticalDragCancel: () =>
-                              setState(() => _dragDy = 0),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 140),
-                            curve: Curves.easeOutBack,
-                            transform: Matrix4.translationValues(0, _dragDy, 0),
-                            child: ProfileAvatar(
-                              profile: profile,
-                              size: 54,
-                              selectedRing: true,
-                              showTypeBadge: true,
+                    if (profile.permissions.canChangeSettingsOrCurrency) ...[
+                      const SizedBox(width: 6),
+                      Material(
+                        color: Colors.white.withValues(alpha: 0.12),
+                        shape: CircleBorder(
+                          side: BorderSide(
+                            color: Colors.white.withValues(alpha: 0.24),
+                          ),
+                        ),
+                        child: InkWell(
+                          key: const Key('profile_hub_edit_btn'),
+                          customBorder: const CircleBorder(),
+                          onTap: widget.onEdit,
+                          child: const Tooltip(
+                            message: 'Edit profile',
+                            child: SizedBox(
+                              width: 34,
+                              height: 34,
+                              child: Icon(
+                                Icons.edit_outlined,
+                                size: 16,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      profile.name,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleLarge
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w800,
-                                            letterSpacing: -0.3,
-                                          ),
-                                    ),
-                                  ),
-                                  if (profile
-                                      .permissions
-                                      .canChangeSettingsOrCurrency) ...[
-                                    const SizedBox(width: 6),
-                                    Material(
-                                      color: cfo.surfaceTonal,
-                                      shape: const CircleBorder(),
-                                      child: InkWell(
-                                        customBorder: const CircleBorder(),
-                                        onTap: widget.onRename,
-                                        child: Tooltip(
-                                          message: 'Rename profile',
-                                          child: SizedBox(
-                                            width: 32,
-                                            height: 32,
-                                            child: Icon(
-                                              Icons.edit_outlined,
-                                              size: 16,
-                                              color: scheme.primary,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                              const SizedBox(height: 3),
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 7,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: scheme.primaryContainer,
-                                      borderRadius: BorderRadius.circular(
-                                        AppSpacing.radiusFull,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      profile.profileType.label,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelSmall
-                                          ?.copyWith(
-                                            color: scheme.primary,
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 10.5,
-                                          ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Expanded(
-                                    child: Text(
-                                      '${profile.baseCurrencyCode} • ${profile.role.label} • ${widget.accountsCount == 1 ? '1 acct' : '${widget.accountsCount} accts'}',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelSmall
-                                          ?.copyWith(
-                                            color: cfo.subtleText,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    HeroGlassPill(
+                      label: profile.profileType.label,
+                      foreground: const Color(0xFFE2E8F0),
+                    ),
+                    const SizedBox(width: 7),
+                    Expanded(
+                      child: Text(
+                        '${profile.baseCurrencyCode} • ${profile.role.label} • ${widget.accountsCount == 1 ? '1 acct' : '${widget.accountsCount} accts'}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.72),
+                          fontWeight: FontWeight.w600,
                         ),
-                      ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CompactVaultMetricCell extends StatelessWidget {
+  const _CompactVaultMetricCell({
+    required this.label,
+    required this.money,
+    required this.masked,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  final String label;
+  final Money money;
+  final bool masked;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cfo = context.cfoColors;
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 2),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Icon(icon, size: 14, color: color),
+                const SizedBox(width: 5),
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: cfo.subtleText,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
-                  Divider(height: 1, thickness: 1, color: cfo.divider),
-                  // Compact, theme-harmonized 1-row Family Members Horizontal Avatar Stack
-                  _FamilyMembersHeroDock(
-                    members: effectiveMembers,
-                    canManageMembers: profile.permissions.canManageMembers,
-                    onTapMembers: widget.onOpenMembers,
-                    onAddMember: widget.onAddMember,
-                  ),
-                ],
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 14,
+                  color: cfo.subtleText,
+                ),
+              ],
+            ),
+            const SizedBox(height: 5),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: AnimatedMoneyText(
+                money: money,
+                masked: masked,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -855,12 +910,12 @@ class _FamilyMembersHeroDock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cfo = context.cfoColors;
-    final scheme = Theme.of(context).colorScheme;
+    const heroBgRing = Color(0xFF102654);
 
     return InkWell(
       key: const Key('profile_family_members_strip'),
       onTap: onTapMembers,
+      splashColor: Colors.white.withValues(alpha: 0.08),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(AppSpacing.md, 10, 12, 11),
         child: LayoutBuilder(
@@ -897,7 +952,7 @@ class _FamilyMembersHeroDock extends StatelessWidget {
                             seedKey:
                                 '${visible[i].id}-${visible[i].displayName}',
                             size: avatarSize,
-                            ringColor: cfo.surfaceElevated,
+                            ringColor: heroBgRing,
                             ringWidth: 2.0,
                           ),
                         ),
@@ -911,16 +966,13 @@ class _FamilyMembersHeroDock extends StatelessWidget {
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: scheme.primaryContainer,
-                              border: Border.all(
-                                color: cfo.surfaceElevated,
-                                width: 2.0,
-                              ),
+                              color: Colors.white.withValues(alpha: 0.16),
+                              border: Border.all(color: heroBgRing, width: 2.0),
                             ),
                             child: Text(
                               '+$overflowCount',
-                              style: TextStyle(
-                                color: scheme.primary,
+                              style: const TextStyle(
+                                color: Colors.white,
                                 fontSize: 10.5,
                                 fontWeight: FontWeight.w800,
                               ),
@@ -938,16 +990,16 @@ class _FamilyMembersHeroDock extends StatelessWidget {
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: cfo.surfaceTonal,
+                                color: Colors.white.withValues(alpha: 0.16),
                                 border: Border.all(
-                                  color: cfo.surfaceElevated,
+                                  color: heroBgRing,
                                   width: 2.0,
                                 ),
                               ),
-                              child: Icon(
+                              child: const Icon(
                                 Icons.add_rounded,
                                 size: 15,
-                                color: scheme.primary,
+                                color: Colors.white,
                               ),
                             ),
                           ),
@@ -969,7 +1021,10 @@ class _FamilyMembersHeroDock extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: Theme.of(context).textTheme.labelMedium
-                                  ?.copyWith(fontWeight: FontWeight.w800),
+                                  ?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w800,
+                                  ),
                             ),
                           ),
                           const SizedBox(width: 5),
@@ -979,7 +1034,7 @@ class _FamilyMembersHeroDock extends StatelessWidget {
                               vertical: 1,
                             ),
                             decoration: BoxDecoration(
-                              color: cfo.surfaceTonal,
+                              color: Colors.white.withValues(alpha: 0.14),
                               borderRadius: BorderRadius.circular(
                                 AppSpacing.radiusFull,
                               ),
@@ -988,7 +1043,7 @@ class _FamilyMembersHeroDock extends StatelessWidget {
                               '${members.length}',
                               style: Theme.of(context).textTheme.labelSmall
                                   ?.copyWith(
-                                    color: cfo.subtleText,
+                                    color: Colors.white.withValues(alpha: 0.85),
                                     fontWeight: FontWeight.w800,
                                     fontSize: 10,
                                   ),
@@ -1001,7 +1056,7 @@ class _FamilyMembersHeroDock extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: cfo.subtleText,
+                          color: Colors.white.withValues(alpha: 0.68),
                           fontSize: 11,
                         ),
                       ),
@@ -1011,8 +1066,15 @@ class _FamilyMembersHeroDock extends StatelessWidget {
                 if (canManageMembers) ...[
                   const SizedBox(width: 6),
                   Material(
-                    color: scheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                    color: Colors.white.withValues(alpha: 0.15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppSpacing.radiusFull,
+                      ),
+                      side: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.22),
+                      ),
+                    ),
                     child: InkWell(
                       key: const Key('profile_add_member_btn'),
                       borderRadius: BorderRadius.circular(
@@ -1027,17 +1089,17 @@ class _FamilyMembersHeroDock extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.add_rounded,
                               size: 14,
-                              color: scheme.primary,
+                              color: Colors.white,
                             ),
                             const SizedBox(width: 2),
                             Text(
                               'Add',
                               style: Theme.of(context).textTheme.labelSmall
                                   ?.copyWith(
-                                    color: scheme.primary,
+                                    color: Colors.white,
                                     fontWeight: FontWeight.w800,
                                   ),
                             ),
@@ -1051,7 +1113,7 @@ class _FamilyMembersHeroDock extends StatelessWidget {
                 Icon(
                   Icons.chevron_right_rounded,
                   size: 18,
-                  color: cfo.subtleText,
+                  color: Colors.white.withValues(alpha: 0.65),
                 ),
               ],
             );
@@ -1106,8 +1168,9 @@ class _VaultReadinessCard extends StatelessWidget {
         ? 'Active'
         : 'Starter';
 
-    return PressScaleCard(
+    return TactileColorBlock(
       key: const Key('profile_vault_readiness'),
+      accent: scoreColor,
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1118,7 +1181,7 @@ class _VaultReadinessCard extends StatelessWidget {
                 score: readinessScore,
                 label: tierLabel,
                 activeColor: scoreColor,
-                secondaryColor: cfo.accentCyan,
+                secondaryColor: scheme.secondary,
                 size: 80,
                 strokeWidth: 7,
               ),
@@ -1181,37 +1244,82 @@ class _VaultReadinessCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: FilledButton.tonalIcon(
-                  key: const Key('profile_run_audit_btn'),
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size(0, 42),
-                    backgroundColor: auditHealthy == true
-                        ? cfo.incomeContainer
-                        : scheme.primaryContainer,
-                    foregroundColor: auditHealthy == true
-                        ? cfo.income
-                        : scheme.primary,
-                  ),
-                  onPressed: auditing ? null : onRunAudit,
-                  icon: auditing
-                      ? const SizedBox(
-                          width: 15,
-                          height: 15,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Icon(
-                          auditHealthy == true
-                              ? Icons.verified_rounded
-                              : Icons.fact_check_outlined,
-                          size: 17,
+                child: Builder(
+                  builder: (context) {
+                    final isDark =
+                        Theme.of(context).brightness == Brightness.dark;
+                    final btnFg = auditHealthy == true
+                        ? Colors.white
+                        : (isDark ? const Color(0xFF08142B) : Colors.white);
+                    return DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: auditHealthy == true
+                              ? [cfo.income, const Color(0xFF059669)]
+                              : (isDark
+                                    ? const [
+                                        Color(0xFFEBC974),
+                                        Color(0xFFCFA03B),
+                                      ]
+                                    : const [
+                                        Color(0xFF0E2554),
+                                        Color(0xFF1A438F),
+                                      ]),
                         ),
-                  label: Text(
-                    auditHealthy == true
-                        ? 'Ledger Balanced (${auditJournalCount ?? 0})'
-                        : 'Verify Ledger Integrity',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: const Color(
+                            0xFFE5C169,
+                          ).withValues(alpha: isDark ? 0.50 : 0.34),
+                          width: 0.9,
+                        ),
+                      ),
+                      child: FilledButton.icon(
+                        key: const Key('profile_run_audit_btn'),
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size(0, 44),
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          foregroundColor: btnFg,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        onPressed: auditing ? null : onRunAudit,
+                        icon: auditing
+                            ? SizedBox(
+                                width: 15,
+                                height: 15,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: btnFg,
+                                ),
+                              )
+                            : Icon(
+                                auditHealthy == true
+                                    ? Icons.verified_rounded
+                                    : Icons.fact_check_outlined,
+                                size: 17,
+                                color: auditHealthy == true
+                                    ? Colors.white
+                                    : (isDark
+                                          ? const Color(0xFF08142B)
+                                          : const Color(0xFFF5DA91)),
+                              ),
+                        label: Text(
+                          auditHealthy == true
+                              ? 'Ledger Balanced (${auditJournalCount ?? 0})'
+                              : 'Verify Ledger Integrity',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ],
@@ -1255,12 +1363,16 @@ class _ReadinessPill extends StatelessWidget {
             color: fg,
           ),
           const SizedBox(width: 4),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: fg,
-              fontWeight: FontWeight.w700,
-              fontSize: 10.5,
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: fg,
+                fontWeight: FontWeight.w700,
+                fontSize: 10.5,
+              ),
             ),
           ),
         ],
@@ -1281,11 +1393,13 @@ class _VaultRosterRow extends StatelessWidget {
     required this.profile,
     required this.isSelected,
     required this.onTap,
+    this.onEdit,
   });
 
   final FinancialProfile profile;
   final bool isSelected;
   final VoidCallback onTap;
+  final VoidCallback? onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -1360,6 +1474,20 @@ class _VaultRosterRow extends StatelessWidget {
               )
             else
               Icon(Icons.swap_horiz_rounded, size: 18, color: cfo.subtleText),
+            if (onEdit != null) ...[
+              const SizedBox(width: 4),
+              IconButton(
+                key: Key('roster_edit_${profile.id.value}'),
+                tooltip: 'Edit ${profile.name}',
+                visualDensity: VisualDensity.compact,
+                icon: Icon(
+                  Icons.edit_outlined,
+                  size: 17,
+                  color: scheme.primary,
+                ),
+                onPressed: onEdit,
+              ),
+            ],
           ],
         ),
       ),
@@ -1388,9 +1516,9 @@ class _FinanceSectionsGrid extends StatelessWidget {
         label: 'Budgets',
         sub: budgetsCount > 0
             ? (budgetsCount == 1
-                  ? '1 active guard'
-                  : '$budgetsCount active guards')
-            : 'Period limits',
+                  ? '1 guard • CA BvA'
+                  : '$budgetsCount guards • CA BvA')
+            : 'CA ZBB & BvA',
         badge: budgetsCount > 0 ? '$budgetsCount' : null,
         route: '/budgets',
         fg: scheme.primary,
@@ -1438,8 +1566,8 @@ class _FinanceSectionsGrid extends StatelessWidget {
         sub: 'Statement mapper',
         badge: null,
         route: '/import-csv',
-        fg: scheme.tertiary,
-        bg: scheme.tertiaryContainer,
+        fg: scheme.secondary,
+        bg: scheme.secondaryContainer,
       ),
       (
         icon: Icons.cloud_sync_rounded,
@@ -1476,214 +1604,18 @@ class _FinanceSectionsGrid extends StatelessWidget {
             for (final s in sections)
               SizedBox(
                 width: width,
-                child: PressScaleCard(
+                child: SculptedBentoAppTile(
+                  icon: s.icon,
+                  title: s.label,
+                  subtitle: s.sub,
+                  accent: s.fg,
+                  badge: s.badge,
                   onTap: () => context.push(s.route),
-                  padding: const EdgeInsets.all(10),
-                  child: Row(
-                    children: [
-                      IconSquircle(
-                        icon: s.icon,
-                        iconColor: s.fg,
-                        backgroundColor: s.bg,
-                        size: 34,
-                      ),
-                      const SizedBox(width: 9),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    s.label,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelLarge
-                                        ?.copyWith(fontWeight: FontWeight.w700),
-                                  ),
-                                ),
-                                if (s.badge != null) ...[
-                                  const SizedBox(width: 4),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                      vertical: 1,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: s.bg,
-                                      borderRadius: BorderRadius.circular(
-                                        AppSpacing.radiusFull,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      s.badge!,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelSmall
-                                          ?.copyWith(
-                                            color: s.fg,
-                                            fontWeight: FontWeight.w800,
-                                            fontSize: 10,
-                                          ),
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                            Text(
-                              s.sub,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.labelSmall
-                                  ?.copyWith(color: cfo.subtleText),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
               ),
           ],
         );
       },
-    );
-  }
-}
-
-class _RenameProfileDialog extends StatefulWidget {
-  const _RenameProfileDialog({required this.profile, required this.parentCtx});
-
-  final FinancialProfile profile;
-  final BuildContext parentCtx;
-
-  @override
-  State<_RenameProfileDialog> createState() => _RenameProfileDialogState();
-}
-
-class _RenameProfileDialogState extends State<_RenameProfileDialog> {
-  late final TextEditingController _ctrl;
-  bool _saving = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = TextEditingController(text: widget.profile.name);
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  Future<void> _submit() async {
-    final name = _ctrl.text.trim();
-    if (name.isEmpty || _saving) return;
-    setState(() => _saving = true);
-    HapticFeedback.selectionClick();
-    final nav = Navigator.of(context);
-    final route = ModalRoute.of(context);
-    await widget.parentCtx.read<ActiveProfileCubit>().renameActiveProfile(name);
-    if (mounted && (route?.isCurrent ?? false) && nav.canPop()) {
-      nav.pop();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cfo = context.cfoColors;
-    final previewName = _ctrl.text.trim().isEmpty
-        ? widget.profile.name
-        : _ctrl.text.trim();
-    final previewProfile = FinancialProfile(
-      id: widget.profile.id,
-      name: previewName,
-      profileType: widget.profile.profileType,
-      baseCurrencyCode: widget.profile.baseCurrencyCode,
-      timezone: widget.profile.timezone,
-      role: widget.profile.role,
-      editorsCanPost: widget.profile.editorsCanPost,
-      createdAtUtc: widget.profile.createdAtUtc,
-      updatedAtUtc: widget.profile.updatedAtUtc,
-      version: widget.profile.version,
-      syncStatus: widget.profile.syncStatus,
-    );
-
-    return ModernDialogShell(
-      title: 'Rename Profile',
-      subtitle: 'Update how this vault appears across Pocket CFO',
-      icon: Icons.drive_file_rename_outline_rounded,
-      confirmLabel: 'Save',
-      isConfirmLoading: _saving,
-      onConfirm: _submit,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Live-updating vault identity preview chip
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: cfo.surfaceTonal,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              border: Border.all(color: cfo.divider.withValues(alpha: 0.7)),
-            ),
-            child: Row(
-              children: [
-                ProfileAvatar(
-                  profile: previewProfile,
-                  size: 38,
-                  showTypeBadge: true,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        previewName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      Text(
-                        '${widget.profile.profileType.label} • ${widget.profile.baseCurrencyCode}',
-                        style: Theme.of(
-                          context,
-                        ).textTheme.labelSmall?.copyWith(color: cfo.subtleText),
-                      ),
-                    ],
-                  ),
-                ),
-                FintechStatusPill(
-                  label: 'Preview',
-                  foreground: Theme.of(context).colorScheme.primary,
-                  background: Theme.of(context).colorScheme.primaryContainer,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 14),
-          FintechTextField(
-            label: 'Profile Name',
-            hintText: 'e.g., Personal Finance, Family Vault',
-            controller: _ctrl,
-            leadingIcon: Icons.badge_outlined,
-            autofocus: true,
-            showClearButton: true,
-            textCapitalization: TextCapitalization.words,
-            textInputAction: TextInputAction.done,
-            onChanged: (_) => setState(() {}),
-            onSubmitted: (_) => _submit(),
-          ),
-        ],
-      ),
     );
   }
 }

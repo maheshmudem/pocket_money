@@ -9,9 +9,8 @@ import 'fintech_widgets.dart';
 /// Semantic accent presets for [FintechAccentCard] and [ModernDialogShell].
 enum ModernDialogAccent { brand, success, warning, danger }
 
-/// Reusable theme-native elevated card with a signature `3px` top gradient hairline trim,
-/// subtle top-right ambient radial sheen, crisp `1px` hairline border, and optional
-/// integrated hairline-separated [bottomBar].
+/// Reusable theme-native elevated card with subtle top-right ambient radial sheen,
+/// uniform crisp `1px` hairline border, and optional integrated hairline-separated [bottomBar].
 class FintechAccentCard extends StatelessWidget {
   const FintechAccentCard({
     required this.child,
@@ -55,7 +54,8 @@ class FintechAccentCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cfo = context.cfoColors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final (trimStart, trimEnd, glowColor) = resolveTrim(context, accent);
+    final (_, _, glowColor) = resolveTrim(context, accent);
+    final duration = AppMotion.resolve(context, AppMotion.standard);
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -79,7 +79,9 @@ class FintechAccentCard extends StatelessWidget {
           children: [
             if (showAmbientGlow)
               Positioned.fill(
-                child: DecoratedBox(
+                child: AnimatedContainer(
+                  duration: duration,
+                  curve: AppMotion.curveStandard,
                   decoration: BoxDecoration(
                     gradient: RadialGradient(
                       center: const Alignment(0.95, -0.85),
@@ -96,12 +98,6 @@ class FintechAccentCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Container(
-                  height: 3,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [trimStart, trimEnd]),
-                  ),
-                ),
                 Padding(padding: padding, child: child),
                 if (bottomBar != null) ...[
                   Divider(height: 1, color: cfo.divider),
@@ -135,7 +131,10 @@ class FintechStatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final duration = AppMotion.resolve(context, AppMotion.fast);
+    return AnimatedContainer(
+      duration: duration,
+      curve: AppMotion.curveStandard,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
       decoration: BoxDecoration(
         color: background,
@@ -159,14 +158,18 @@ class FintechStatusPill extends StatelessWidget {
             const SizedBox(width: 4.5),
           ],
           Flexible(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: foreground,
-                fontWeight: FontWeight.w800,
-                fontSize: 10.5,
+            child: AnimatedSwitcher(
+              duration: duration,
+              child: Text(
+                label,
+                key: ValueKey<String>(label),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: foreground,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 10.5,
+                ),
               ),
             ),
           ),
@@ -291,12 +294,20 @@ Future<T?> showModernDialog<T>({
     pageBuilder: (dialogCtx, _, _) => builder(dialogCtx),
     transitionBuilder: (dialogCtx, anim, _, child) {
       if (!animate) return child;
-      final fade = CurvedAnimation(parent: anim, curve: Curves.easeOutCubic);
-      final scale = Tween<double>(begin: 0.93, end: 1.0).animate(
+      final fade = CurvedAnimation(
+        parent: anim,
+        curve: AppMotion.curveEmphasized,
+        reverseCurve: AppMotion.curveExit,
+      );
+      final slide = Tween<Offset>(
+        begin: const Offset(0, 0.028),
+        end: Offset.zero,
+      ).animate(fade);
+      final scale = Tween<double>(begin: 0.955, end: 1.0).animate(
         CurvedAnimation(
           parent: anim,
-          curve: Curves.easeOutBack,
-          reverseCurve: Curves.easeInCubic,
+          curve: AppMotion.curveSpring,
+          reverseCurve: AppMotion.curveExit,
         ),
       );
       return BackdropFilter(
@@ -306,7 +317,10 @@ Future<T?> showModernDialog<T>({
         ),
         child: FadeTransition(
           opacity: fade,
-          child: ScaleTransition(scale: scale, child: child),
+          child: SlideTransition(
+            position: slide,
+            child: ScaleTransition(scale: scale, child: child),
+          ),
         ),
       );
     },
@@ -355,10 +369,7 @@ class ModernDialogShell extends StatelessWidget {
     final cfo = context.cfoColors;
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final (trimStart, trimEnd, glowColor) = FintechAccentCard.resolveTrim(
-      context,
-      accent,
-    );
+    final (_, _, glowColor) = FintechAccentCard.resolveTrim(context, accent);
 
     final (
       Color iconFg,
@@ -451,16 +462,6 @@ class ModernDialogShell extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // 3px accent trim bar
-                      Container(
-                        height: 3,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [trimStart, trimEnd],
-                          ),
-                        ),
-                      ),
-
                       // Sleek header with IconSquircle + Title/Subtitle + Close Pill
                       Padding(
                         padding: const EdgeInsets.fromLTRB(18, 16, 14, 12),

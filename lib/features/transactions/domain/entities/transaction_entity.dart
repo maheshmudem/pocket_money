@@ -133,6 +133,8 @@ final class TransactionEntity extends Equatable {
     this.splits = const [],
     this.postings = const [],
     this.journalStatus,
+    this.runningBalanceBefore,
+    this.runningBalanceAfter,
   });
 
   final String id;
@@ -162,6 +164,12 @@ final class TransactionEntity extends Equatable {
   final List<TransactionSplitEntity> splits;
   final List<PostingDetail> postings;
   final String? journalStatus;
+
+  /// Chronological account balance immediately before this posted transaction.
+  final Money? runningBalanceBefore;
+
+  /// Chronological account balance immediately after this posted transaction.
+  final Money? runningBalanceAfter;
 
   bool get isReversed => journalStatus == 'reversed';
 
@@ -194,6 +202,8 @@ final class TransactionEntity extends Equatable {
     splits,
     postings,
     journalStatus,
+    runningBalanceBefore,
+    runningBalanceAfter,
   ];
 }
 

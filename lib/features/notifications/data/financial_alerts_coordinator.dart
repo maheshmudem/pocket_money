@@ -232,6 +232,23 @@ final class FinancialAlertsCoordinator {
     );
   }
 
+  /// Persists and emits externally evaluated alerts (e.g. Monthly Bucket List
+  /// reminders) using standard dedupe and privacy masking.
+  Future<List<EvaluatedAlert>> dispatchExternalAlerts(
+    ProfileId profileId,
+    List<EvaluatedAlert> candidates, {
+    bool dispatchOs = false,
+  }) async {
+    if (candidates.isEmpty) return const [];
+    final hideBalances = await _settingsRepo.getBool('ui.hide_balances');
+    return _persistAndDispatch(
+      profileId: profileId,
+      candidates: candidates,
+      dispatchOs: dispatchOs,
+      hideBalances: hideBalances,
+    );
+  }
+
   Future<List<EvaluatedAlert>> _persistAndDispatch({
     required ProfileId profileId,
     required List<EvaluatedAlert> candidates,
@@ -282,6 +299,7 @@ final class FinancialAlertsCoordinator {
           AlertKind.lowBalance => NotificationChannels.accountAlerts,
           AlertKind.goalMilestone50 ||
           AlertKind.goalCompleted100 => NotificationChannels.milestones,
+          AlertKind.bucketReminder => NotificationChannels.reminders,
           AlertKind.recurringDue ||
           AlertKind.testAlert => NotificationChannels.budgetAlerts,
         };

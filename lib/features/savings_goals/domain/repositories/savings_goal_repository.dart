@@ -17,11 +17,15 @@ abstract interface class SavingsGoalRepository {
 
   /// Records a contribution. For `accountTransfer` mode, creates an atomic
   /// ledger transfer from [sourceAccountId] into the goal's linked account (`FR-014`).
+  /// When [allowDirectDeposit] is `true` and [sourceAccountId] already matches
+  /// `linkedAccountId`, records the contribution directly without a redundant
+  /// same-account transfer.
   Future<Result<SavingsGoalEntity>> recordContribution({
     required ProfileId profileId,
     required String goalId,
     required int amountMinor,
     String? sourceAccountId,
     String? note,
+    bool allowDirectDeposit = false,
   });
 }

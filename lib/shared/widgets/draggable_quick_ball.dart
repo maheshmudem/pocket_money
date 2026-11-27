@@ -13,43 +13,58 @@ import '../../features/transactions/presentation/pages/transactions_page.dart';
 /// - Tap to expand smart-anchored Quick Command Pod (Track Expense, Set Budget, Income, Transfer, Account)
 /// - Long-press to jump straight into Track Expense
 class DraggableQuickBall extends StatefulWidget {
-  const DraggableQuickBall({required this.profile, super.key});
+  const DraggableQuickBall({
+    required this.profile,
+    super.key,
+    this.bottomClearance = 16.0,
+  });
 
   final FinancialProfile profile;
+  final double bottomClearance;
 
   @override
   State<DraggableQuickBall> createState() => _DraggableQuickBallState();
 }
 
 class _DraggableQuickBallState extends State<DraggableQuickBall> {
-  static const double _ballSize = 54;
+  static const double _ballSize = 46;
   static const double _edgeMargin = 14;
 
   Offset? _position;
   bool _dragging = false;
   bool _expanded = false;
 
-  Offset _clampAndResolve(Size area) {
+  Offset _clampAndResolve(Size area, {required double bottomClearance}) {
     final minX = _edgeMargin;
     final maxX = (area.width - _ballSize - _edgeMargin).clamp(
       minX,
       double.infinity,
     );
     final minY = _edgeMargin;
-    final maxY = (area.height - _ballSize - 18).clamp(minY, double.infinity);
+    final maxY = (area.height - _ballSize - bottomClearance).clamp(
+      minY,
+      double.infinity,
+    );
 
     final current = _position ?? Offset(maxX, maxY);
     return Offset(current.dx.clamp(minX, maxX), current.dy.clamp(minY, maxY));
   }
 
-  void _snapToNearestEdge(Size area, Offset raw) {
+  void _snapToNearestEdge(
+    Size area,
+    Offset raw, {
+    required double bottomClearance,
+  }) {
     final minX = _edgeMargin;
     final maxX = (area.width - _ballSize - _edgeMargin).clamp(
       minX,
       double.infinity,
     );
     final minY = _edgeMargin;
-    final maxY = (area.height - _ballSize - 18).clamp(minY, double.infinity);
+    final maxY = (area.height - _ballSize - bottomClearance).clamp(
+      minY,
+      double.infinity,
+    );
 
     final centerX = raw.dx + (_ballSize / 2);
     final snappedX = centerX < (area.width / 2) ? minX : maxX;
@@ -79,7 +94,9 @@ class _DraggableQuickBallState extends State<DraggableQuickBall> {
         if (area.width <= 0 || area.height <= 0) {
           return const SizedBox.shrink();
         }
-        final pos = _clampAndResolve(area);
+        final bottomClearance =
+            widget.bottomClearance + MediaQuery.paddingOf(context).bottom;
+        final pos = _clampAndResolve(area, bottomClearance: bottomClearance);
         final onRightHalf = (pos.dx + (_ballSize / 2)) >= (area.width / 2);
         final onLowerHalf = (pos.dy + (_ballSize / 2)) >= (area.height * 0.46);
 
@@ -352,7 +369,10 @@ class _DraggableQuickBallState extends State<DraggableQuickBall> {
                       });
                     },
                     onPanUpdate: (details) {
-                      final cur = _clampAndResolve(area);
+                      final cur = _clampAndResolve(
+                        area,
+                        bottomClearance: bottomClearance,
+                      );
                       setState(() {
                         _position = Offset(
                           (cur.dx + details.delta.dx).clamp(
@@ -361,66 +381,96 @@ class _DraggableQuickBallState extends State<DraggableQuickBall> {
                           ),
                           (cur.dy + details.delta.dy).clamp(
                             0.0,
-                            area.height - _ballSize,
+                            (area.height - _ballSize - bottomClearance + 14)
+                                .clamp(0.0, area.height - _ballSize),
                           ),
                         );
                       });
                     },
                     onPanEnd: (_) {
                       HapticFeedback.lightImpact();
-                      _snapToNearestEdge(area, _position ?? pos);
+                      _snapToNearestEdge(
+                        area,
+                        _position ?? pos,
+                        bottomClearance: bottomClearance,
+                      );
                     },
-                    onPanCancel: () =>
-                        _snapToNearestEdge(area, _position ?? pos),
+                    onPanCancel: () => _snapToNearestEdge(
+                      area,
+                      _position ?? pos,
+                      bottomClearance: bottomClearance,
+                    ),
                     child: AnimatedScale(
                       scale: _dragging ? 1.10 : 1.0,
                       duration: motionFast,
-                      child: Container(
-                        width: _ballSize,
-                        height: _ballSize,
-                        padding: const EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.18),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.55),
-                            width: 1.5,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: cfo.heroGradientEnd.withValues(
-                                alpha: _dragging ? 0.48 : 0.34,
+                      child: Builder(
+                        builder: (context) {
+                          final isDark =
+                              Theme.of(context).brightness == Brightness.dark;
+                          return Container(
+                            width: _ballSize,
+                            height: _ballSize,
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: isDark
+                                  ? const Color(
+                                      0xFFE5C169,
+                                    ).withValues(alpha: 0.22)
+                                  : Colors.white.withValues(alpha: 0.92),
+                              border: Border.all(
+                                color: const Color(
+                                  0xFFE5C169,
+                                ).withValues(alpha: isDark ? 0.56 : 0.62),
+                                width: 1.2,
                               ),
-                              blurRadius: _dragging ? 18 : 14,
-                              offset: const Offset(0, 5),
-                            ),
-                          ],
-                        ),
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                cfo.heroGradientStart,
-                                cfo.heroGradientEnd,
-                                cfo.accentCyan,
+                              boxShadow: [
+                                BoxShadow(
+                                  color:
+                                      (isDark
+                                              ? const Color(0xFFCFA03B)
+                                              : const Color(0xFF0E2554))
+                                          .withValues(
+                                            alpha: _dragging ? 0.44 : 0.28,
+                                          ),
+                                  blurRadius: _dragging ? 20 : 14,
+                                  offset: const Offset(0, 6),
+                                ),
                               ],
                             ),
-                          ),
-                          child: Center(
-                            child: AnimatedRotation(
-                              turns: _expanded ? 0.125 : 0.0,
-                              duration: motionFast,
-                              child: const Icon(
-                                Icons.add_rounded,
-                                color: Colors.white,
-                                size: 28,
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: isDark
+                                      ? const [
+                                          Color(0xFFEEC973),
+                                          Color(0xFFC99935),
+                                        ]
+                                      : const [
+                                          Color(0xFF0C224E),
+                                          Color(0xFF1A438F),
+                                        ],
+                                ),
+                              ),
+                              child: Center(
+                                child: AnimatedRotation(
+                                  turns: _expanded ? 0.125 : 0.0,
+                                  duration: motionFast,
+                                  child: Icon(
+                                    Icons.add_rounded,
+                                    color: isDark
+                                        ? const Color(0xFF08142B)
+                                        : const Color(0xFFF5DA91),
+                                    size: 22,
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
-                        ),
+                          );
+                        },
                       ),
                     ),
                   ),

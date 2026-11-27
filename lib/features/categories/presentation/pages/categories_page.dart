@@ -4,6 +4,7 @@ import 'package:get_it/get_it.dart';
 
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/utilities/id_generator.dart';
+import '../../../../shared/widgets/classic_motion.dart';
 import '../../../../shared/widgets/enterprise_layout.dart';
 import '../../../../shared/widgets/fintech_widgets.dart';
 import '../../../../shared/widgets/modern_dropdown.dart';
@@ -160,92 +161,99 @@ class _CategoriesPageState extends State<CategoriesPage> {
                             '${_filterType.label} Categories (${filtered.length})',
                       ),
                       const SizedBox(height: AppSpacing.xs),
-                      Wrap(
-                        spacing: AppSpacing.sm,
-                        runSpacing: AppSpacing.sm,
-                        children: [
-                          for (var i = 0; i < filtered.length; i++)
-                            SizedBox(
-                              width: cardWidth,
-                              child: Builder(
-                                builder: (context) {
-                                  final c = filtered[i];
-                                  final isIncome =
-                                      c.categoryType == CategoryType.income;
-                                  return StaggeredFadeSlide(
-                                    index: i,
-                                    child: PressScaleCard(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: AppSpacing.md,
-                                        vertical: AppSpacing.xs,
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          IconSquircle(
-                                            icon: _iconForCategory(
-                                              c.name,
-                                              c.categoryType,
+                      ClassicTabSwitcher(
+                        activeIndex: _filterType == CategoryType.expense
+                            ? 0
+                            : 1,
+                        child: Wrap(
+                          spacing: AppSpacing.sm,
+                          runSpacing: AppSpacing.sm,
+                          children: [
+                            for (var i = 0; i < filtered.length; i++)
+                              SizedBox(
+                                width: cardWidth,
+                                child: Builder(
+                                  builder: (context) {
+                                    final c = filtered[i];
+                                    final isIncome =
+                                        c.categoryType == CategoryType.income;
+                                    return StaggeredFadeSlide(
+                                      index: i,
+                                      child: PressScaleCard(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: AppSpacing.md,
+                                          vertical: AppSpacing.xs,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            IconSquircle(
+                                              icon: _iconForCategory(
+                                                c.name,
+                                                c.categoryType,
+                                              ),
+                                              iconColor: isIncome
+                                                  ? cfo.income
+                                                  : cfo.expense,
+                                              backgroundColor: isIncome
+                                                  ? cfo.incomeContainer
+                                                  : cfo.expenseContainer,
+                                              size: 40,
                                             ),
-                                            iconColor: isIncome
-                                                ? cfo.income
-                                                : cfo.expense,
-                                            backgroundColor: isIncome
-                                                ? cfo.incomeContainer
-                                                : cfo.expenseContainer,
-                                            size: 40,
-                                          ),
-                                          const SizedBox(width: AppSpacing.sm),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  c.name,
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  style: Theme.of(
-                                                    context,
-                                                  ).textTheme.titleSmall,
-                                                ),
-                                                Text(
-                                                  c.isSystem
-                                                      ? 'Built-in system category'
-                                                      : 'Custom category',
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .labelSmall
-                                                      ?.copyWith(
-                                                        color: cfo.subtleText,
-                                                      ),
-                                                ),
-                                              ],
+                                            const SizedBox(
+                                              width: AppSpacing.sm,
                                             ),
-                                          ),
-                                          Switch(
-                                            value: c.isActive,
-                                            onChanged: canManage
-                                                ? (active) =>
-                                                      repo.updateCategory(
-                                                        profileId: profile.id,
-                                                        categoryId: c.id,
-                                                        name: c.name,
-                                                        isActive: active,
-                                                      )
-                                                : null,
-                                          ),
-                                        ],
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    c.name,
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: Theme.of(
+                                                      context,
+                                                    ).textTheme.titleSmall,
+                                                  ),
+                                                  Text(
+                                                    c.isSystem
+                                                        ? 'Built-in system category'
+                                                        : 'Custom category',
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .labelSmall
+                                                        ?.copyWith(
+                                                          color: cfo.subtleText,
+                                                        ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            Switch(
+                                              value: c.isActive,
+                                              onChanged: canManage
+                                                  ? (active) =>
+                                                        repo.updateCategory(
+                                                          profileId: profile.id,
+                                                          categoryId: c.id,
+                                                          name: c.name,
+                                                          isActive: active,
+                                                        )
+                                                  : null,
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  );
-                                },
+                                    );
+                                  },
+                                ),
                               ),
-                            ),
-                        ],
+                          ],
+                        ),
                       ),
                     ],
                   );

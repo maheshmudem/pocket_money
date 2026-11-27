@@ -5,14 +5,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../app/theme/app_theme.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/financial_engine/currency.dart';
 import '../../../../core/financial_engine/fx_rate.dart';
 import '../../../../core/financial_engine/money.dart';
 import '../../../../core/utilities/clock.dart';
 import '../../../../core/utilities/id_generator.dart';
+import '../../../../shared/widgets/editorial_bento_kit.dart';
 import '../../../../shared/widgets/enterprise_layout.dart';
 import '../../../../shared/widgets/fintech_widgets.dart';
+import '../../../../shared/widgets/flagship_visuals.dart';
 import '../../../../shared/widgets/modern_dialogs.dart';
 import '../../../../shared/widgets/modern_dropdown.dart';
 import '../../../../shared/widgets/modern_inputs.dart';
@@ -200,8 +203,8 @@ class _AccountsPageState extends State<AccountsPage> {
                 SliverPadding(
                   padding: EnterprisePageContainer.responsivePadding(
                     context,
-                    top: 12,
-                    bottom: 36,
+                    top: 10,
+                    bottom: 44,
                   ),
                   sliver: SliverToBoxAdapter(
                     child: EnterprisePageContainer(
@@ -236,12 +239,11 @@ class _AccountsPageState extends State<AccountsPage> {
                                     children: [
                                       Text(
                                         title,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleSmall
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w800,
-                                            ),
+                                        style: AppTypography.editorial(
+                                          context,
+                                          fontSize: 19,
+                                          fontWeight: FontWeight.w700,
+                                        ),
                                       ),
                                       const SizedBox(width: 6),
                                       Container(
@@ -849,6 +851,14 @@ class _AccountsFilterToolbar extends StatelessWidget {
                         child: Builder(
                           builder: (context) {
                             final active = selectedGroup == seg.$1;
+                            final isDark =
+                                Theme.of(context).brightness == Brightness.dark;
+                            final activeColors = isDark
+                                ? const [Color(0xFFEBC974), Color(0xFFCFA03B)]
+                                : const [Color(0xFF0E2554), Color(0xFF1A438F)];
+                            final activeFg = isDark
+                                ? const Color(0xFF08142B)
+                                : Colors.white;
                             return GestureDetector(
                               behavior: HitTestBehavior.opaque,
                               onTap: () {
@@ -860,17 +870,43 @@ class _AccountsFilterToolbar extends StatelessWidget {
                                 curve: Curves.easeOutCubic,
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
-                                  color: active
-                                      ? cfo.surfaceElevated
-                                      : Colors.transparent,
+                                  gradient: active
+                                      ? LinearGradient(
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                          colors: activeColors,
+                                        )
+                                      : null,
+                                  color: active ? null : Colors.transparent,
                                   borderRadius: BorderRadius.circular(
                                     AppSpacing.radiusFull,
                                   ),
+                                  border: active
+                                      ? Border.all(
+                                          color: const Color(0xFFE5C169)
+                                              .withValues(
+                                                alpha: isDark ? 0.50 : 0.34,
+                                              ),
+                                          width: 0.85,
+                                        )
+                                      : null,
                                   boxShadow: active
                                       ? [
                                           BoxShadow(
-                                            color: cfo.cardShadow,
-                                            blurRadius: 6,
+                                            color:
+                                                (isDark
+                                                        ? const Color(
+                                                            0xFFCFA03B,
+                                                          )
+                                                        : const Color(
+                                                            0xFF0E2554,
+                                                          ))
+                                                    .withValues(
+                                                      alpha: isDark
+                                                          ? 0.30
+                                                          : 0.24,
+                                                    ),
+                                            blurRadius: 8,
                                             offset: const Offset(0, 2),
                                           ),
                                         ]
@@ -890,7 +926,7 @@ class _AccountsFilterToolbar extends StatelessWidget {
                                           .labelMedium
                                           ?.copyWith(
                                             color: active
-                                                ? scheme.primary
+                                                ? activeFg
                                                 : cfo.subtleText,
                                             fontWeight: active
                                                 ? FontWeight.w800
@@ -1273,9 +1309,10 @@ IconData _accountIcon(FinancialAccountType type) => switch (type) {
   FinancialAccountType.loan => (cfo.expense, cfo.expenseContainer),
 };
 
-/// Compact, theme-native Treasury Header Card with animated Net Position,
-/// Solvency badge, inline Assets/Liabilities split, Capital Allocation bar,
-/// and integrated flat Treasury Quick-Action bar.
+/// Open-Canvas Editorial Treasury Header with Monumental Net Position,
+/// Live Multi-Segment Asset Allocation Donut Ring, Hairline Assets/Liabilities
+/// strip, and compact Quick-Action pills — letting the physical Metallic Vault
+/// Cards below command the visual centerpiece without duplicate dark slabs.
 class _PortfolioHeaderCard extends StatelessWidget {
   const _PortfolioHeaderCard({
     required this.profile,
@@ -1322,443 +1359,399 @@ class _PortfolioHeaderCard extends StatelessWidget {
     }
     final grossVolume = liquidMinor + walletMinor + investMinor + debtMinor;
 
-    final segments = [
-      if (liquidMinor > 0)
-        (label: 'Bank & Cash', val: liquidMinor, color: scheme.primary),
-      if (walletMinor > 0)
-        (label: 'Wallets', val: walletMinor, color: cfo.transfer),
-      if (investMinor > 0)
-        (label: 'Investments', val: investMinor, color: scheme.tertiary),
-      if (debtMinor > 0)
-        (label: 'Liabilities', val: debtMinor, color: cfo.expense),
-    ];
-
     final (
       String solvencyLabel,
       Color solvencyFg,
       Color solvencyBg,
     ) = debtMinor == 0
-        ? ('Debt-Free Portfolio', cfo.success, cfo.successContainer)
+        ? ('Debt-Free Portfolio', cfo.income, cfo.incomeContainer)
         : (totalAssets.amountMinor >= totalLiabilities.amountMinor * 2
               ? ('Strong Solvency', cfo.income, cfo.incomeContainer)
               : ('Monitor Leverage', cfo.warning, cfo.warningContainer));
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        boxShadow: [
-          BoxShadow(
-            color: cfo.cardShadow,
-            blurRadius: 16,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Material(
-        color: cfo.surfaceElevated,
-        clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-          side: BorderSide(color: cfo.divider),
+    final segPalette = [
+      if (liquidMinor > 0)
+        (label: 'Bank & Cash', val: liquidMinor, color: scheme.primary),
+      if (walletMinor > 0)
+        (label: 'Wallets', val: walletMinor, color: cfo.transfer),
+      if (investMinor > 0)
+        (label: 'Investments', val: investMinor, color: scheme.secondary),
+      if (debtMinor > 0)
+        (label: 'Liabilities', val: debtMinor, color: cfo.expense),
+    ];
+
+    final quickActions = [
+      (
+        icon: Icons.swap_horiz_rounded,
+        label: 'Transfer',
+        color: cfo.transfer,
+        onTap: () => openAddTransactionSheet(
+          context,
+          profile,
+          initialType: TransactionType.transfer,
         ),
-        child: Stack(
+      ),
+      (
+        icon: Icons.south_west_rounded,
+        label: 'Deposit',
+        color: cfo.income,
+        onTap: () => openAddTransactionSheet(
+          context,
+          profile,
+          initialType: TransactionType.income,
+        ),
+      ),
+      (
+        icon: Icons.north_east_rounded,
+        label: 'Spend',
+        color: cfo.expense,
+        onTap: () => openAddTransactionSheet(
+          context,
+          profile,
+          initialType: TransactionType.expense,
+        ),
+      ),
+      (
+        icon: Icons.add_card_rounded,
+        label: 'New Vault',
+        color: scheme.secondary,
+        onTap: onAddTap,
+      ),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Row 1: Editorial Title + Debt-Free Badge + Gradient + Add CTA
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Subtle top-right ambient tint harmonized with Light & Dark surfaces
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: const Alignment(0.95, -0.85),
-                    radius: 1.25,
-                    colors: [
-                      cfo.heroGradientEnd.withValues(
-                        alpha: isDark ? 0.16 : 0.055,
-                      ),
-                      Colors.transparent,
-                    ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Portfolio Overview',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.editorial(
+                      context,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 4),
+                  FintechStatusPill(
+                    label: solvencyLabel,
+                    showDot: true,
+                    foreground: solvencyFg,
+                    background: solvencyBg,
+                  ),
+                ],
               ),
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // 3px signature brand hairline trim
-                Container(
-                  height: 3,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [cfo.heroGradientEnd, cfo.accentCyan],
+            if (canAdd) ...[
+              const SizedBox(width: 8),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: isDark
+                        ? const [Color(0xFFEBC974), Color(0xFFCFA03B)]
+                        : const [Color(0xFF0E2554), Color(0xFF1A438F)],
+                  ),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                  border: Border.all(
+                    color: const Color(
+                      0xFFE5C169,
+                    ).withValues(alpha: isDark ? 0.55 : 0.36),
+                    width: 0.9,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color:
+                          (isDark
+                                  ? const Color(0xFFCFA03B)
+                                  : const Color(0xFF0E2554))
+                              .withValues(alpha: isDark ? 0.30 : 0.24),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  key: const Key('accounts_add_btn'),
+                  color: Colors.transparent,
+                  shape: const StadiumBorder(),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      onAddTap();
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.add_rounded,
+                            size: 16,
+                            color: isDark
+                                ? const Color(0xFF08142B)
+                                : const Color(0xFFF5DA91),
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            'Add',
+                            style: Theme.of(context).textTheme.labelMedium
+                                ?.copyWith(
+                                  color: isDark
+                                      ? const Color(0xFF08142B)
+                                      : Colors.white,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 13, 16, 13),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // Row 2: Monumental Open-Canvas Net Position + Live Asset Mix Donut Ring
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Wrap(
+                    spacing: 7,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      // Row 1: Portfolio Overview + Solvency pill + compact + Add CTA
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Row(
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    'Portfolio Overview',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelLarge
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.w800,
-                                          color: cfo.subtleText,
-                                        ),
-                                  ),
-                                ),
-                                const SizedBox(width: 7),
-                                Flexible(
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 7,
-                                      vertical: 2.5,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: solvencyBg,
-                                      borderRadius: BorderRadius.circular(
-                                        AppSpacing.radiusFull,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Container(
-                                          width: 5,
-                                          height: 5,
-                                          decoration: BoxDecoration(
-                                            color: solvencyFg,
-                                            shape: BoxShape.circle,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Flexible(
-                                          child: Text(
-                                            solvencyLabel,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .labelSmall
-                                                ?.copyWith(
-                                                  color: solvencyFg,
-                                                  fontWeight: FontWeight.w800,
-                                                  fontSize: 10,
-                                                ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
+                      Text(
+                        'Net Position',
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(
+                              color: cfo.subtleText,
+                              fontWeight: FontWeight.w700,
                             ),
-                          ),
-                          if (canAdd) ...[
-                            const SizedBox(width: 8),
-                            Material(
-                              key: const Key('accounts_add_btn'),
-                              color: scheme.primaryContainer,
-                              borderRadius: BorderRadius.circular(
-                                AppSpacing.radiusFull,
-                              ),
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(
-                                  AppSpacing.radiusFull,
-                                ),
-                                onTap: () {
-                                  HapticFeedback.selectionClick();
-                                  onAddTap();
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 11,
-                                    vertical: 6,
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.add_rounded,
-                                        size: 15,
-                                        color: scheme.primary,
-                                      ),
-                                      const SizedBox(width: 3),
-                                      Text(
-                                        'Add',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .labelMedium
-                                            ?.copyWith(
-                                              color: scheme.primary,
-                                              fontWeight: FontWeight.w800,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
                       ),
-                      const SizedBox(height: 10),
-
-                      // Row 2: Hero Net Position + Active metadata
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Net Position',
-                                  style: Theme.of(context).textTheme.labelSmall
-                                      ?.copyWith(
-                                        color: cfo.subtleText,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                ),
-                                const SizedBox(height: 2),
-                                FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  alignment: Alignment.centerLeft,
-                                  child: AnimatedMoneyText(
-                                    money: netPosition,
-                                    masked: masked,
-                                    semanticContextLabel: 'Net position',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .headlineMedium
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.w800,
-                                          letterSpacing: -0.6,
-                                          color: netPosition.amountMinor >= 0
-                                              ? scheme.onSurface
-                                              : cfo.expense,
-                                        ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: cfo.surfaceTonal,
-                              borderRadius: BorderRadius.circular(
-                                AppSpacing.radiusFull,
-                              ),
-                            ),
-                            child: Text(
-                              '${accounts.length} active • ${profile.baseCurrencyCode}',
-                              style: Theme.of(context).textTheme.labelSmall
-                                  ?.copyWith(
-                                    color: cfo.subtleText,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 10.5,
-                                  ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 11),
-
-                      // Row 3: Single-row Assets | Liabilities strip
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 9,
+                          horizontal: 7,
+                          vertical: 2,
                         ),
                         decoration: BoxDecoration(
                           color: cfo.surfaceTonal,
                           borderRadius: BorderRadius.circular(
-                            AppSpacing.radiusMd,
+                            AppSpacing.radiusFull,
                           ),
-                          border: Border.all(
-                            color: cfo.divider.withValues(alpha: 0.7),
-                          ),
+                          border: Border.all(color: cfo.divider),
                         ),
+                        child: Text(
+                          '${accounts.length} active • ${profile.baseCurrencyCode}',
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: cfo.subtleText,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 10,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: AnimatedMoneyText(
+                      money: netPosition,
+                      masked: masked,
+                      semanticContextLabel: 'Net position',
+                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                        fontSize: 36,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -1.1,
+                        height: 1.05,
+                        color: netPosition.amountMinor >= 0
+                            ? scheme.onSurface
+                            : cfo.expense,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            AssetAllocationDonut(
+              slices: [
+                for (final seg in segPalette)
+                  AllocationDonutSlice(value: seg.val, color: seg.color),
+              ],
+              centerValue: '${accounts.length}',
+              centerCaption: accounts.length == 1 ? 'VAULT' : 'VAULTS',
+              size: 74,
+              masked: masked,
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+
+        // Row 3: Dual Tactile Mini-Wells (Assets vs Liabilities) + Allocation Legend
+        Row(
+          children: [
+            Expanded(
+              child: TactileColorBlock(
+                accent: cfo.income,
+                borderRadius: 16,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 9,
+                ),
+                child: _InlinePortfolioStat(
+                  label: 'Total Assets',
+                  money: totalAssets,
+                  masked: masked,
+                  icon: Icons.trending_up_rounded,
+                  color: cfo.income,
+                ),
+              ),
+            ),
+            const SizedBox(width: 9),
+            Expanded(
+              child: TactileColorBlock(
+                accent: totalLiabilities.amountMinor > 0
+                    ? cfo.expense
+                    : scheme.primary,
+                borderRadius: 16,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 9,
+                ),
+                child: _InlinePortfolioStat(
+                  label: 'Total Liabilities',
+                  money: totalLiabilities,
+                  masked: masked,
+                  icon: Icons.credit_card_rounded,
+                  color: totalLiabilities.amountMinor > 0
+                      ? cfo.expense
+                      : cfo.subtleText,
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        if (segPalette.isNotEmpty && grossVolume > 0 && !masked) ...[
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 12,
+            runSpacing: 4,
+            children: [
+              for (final seg in segPalette)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 7,
+                      height: 7,
+                      decoration: BoxDecoration(
+                        color: seg.color,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      '${seg.label} ${((seg.val / grossVolume) * 100).round()}%',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: cfo.subtleText,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        ],
+
+        if (canAdd) ...[
+          const SizedBox(height: 12),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (var i = 0; i < quickActions.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 8),
+                  Material(
+                    color: cfo.surfaceElevated,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppSpacing.radiusFull,
+                      ),
+                      side: BorderSide(color: cfo.divider, width: 1.0),
+                    ),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(
+                        AppSpacing.radiusFull,
+                      ),
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        quickActions[i].onTap();
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(7, 6, 12, 6),
                         child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Expanded(
-                              child: _InlinePortfolioStat(
-                                label: 'Total Assets',
-                                money: totalAssets,
-                                masked: masked,
-                                icon: Icons.trending_up_rounded,
-                                color: cfo.income,
-                              ),
-                            ),
                             Container(
-                              width: 1,
-                              height: 28,
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 10,
+                              width: 24,
+                              height: 24,
+                              decoration: BoxDecoration(
+                                color: quickActions[i].color.withValues(
+                                  alpha: isDark ? 0.20 : 0.12,
+                                ),
+                                shape: BoxShape.circle,
                               ),
-                              color: cfo.divider,
+                              child: Icon(
+                                quickActions[i].icon,
+                                size: 13.5,
+                                color: quickActions[i].color,
+                              ),
                             ),
-                            Expanded(
-                              child: _InlinePortfolioStat(
-                                label: 'Total Liabilities',
-                                money: totalLiabilities,
-                                masked: masked,
-                                icon: Icons.credit_card_rounded,
-                                color: totalLiabilities.amountMinor > 0
-                                    ? cfo.expense
-                                    : cfo.subtleText,
-                              ),
+                            const SizedBox(width: 7),
+                            Text(
+                              quickActions[i].label,
+                              maxLines: 1,
+                              style: Theme.of(context).textTheme.labelMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 12,
+                                  ),
                             ),
                           ],
                         ),
                       ),
-
-                      // Row 4: Compact 6px Capital Allocation Bar + Legend
-                      if (segments.isNotEmpty &&
-                          grossVolume > 0 &&
-                          !masked) ...[
-                        const SizedBox(height: 10),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(
-                            AppSpacing.radiusFull,
-                          ),
-                          child: SizedBox(
-                            height: 6,
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                for (var i = 0; i < segments.length; i++) ...[
-                                  if (i > 0) const SizedBox(width: 2),
-                                  Expanded(
-                                    flex:
-                                        ((segments[i].val / grossVolume) * 100)
-                                            .round()
-                                            .clamp(4, 100),
-                                    child: ColoredBox(color: segments[i].color),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Wrap(
-                          spacing: 12,
-                          runSpacing: 4,
-                          children: [
-                            for (final seg in segments)
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    width: 7,
-                                    height: 7,
-                                    decoration: BoxDecoration(
-                                      color: seg.color,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 5),
-                                  Text(
-                                    '${seg.label} ${((seg.val / grossVolume) * 100).round()}%',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelSmall
-                                        ?.copyWith(
-                                          color: cfo.subtleText,
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 11,
-                                        ),
-                                  ),
-                                ],
-                              ),
-                          ],
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-
-                // Row 5: Flat hairline-divided Quick Treasury Action Bar
-                if (canAdd) ...[
-                  Divider(height: 1, color: cfo.divider),
-                  IntrinsicHeight(
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _TreasuryFlatAction(
-                            icon: Icons.swap_horiz_rounded,
-                            label: 'Transfer',
-                            color: cfo.transfer,
-                            onTap: () => openAddTransactionSheet(
-                              context,
-                              profile,
-                              initialType: TransactionType.transfer,
-                            ),
-                          ),
-                        ),
-                        VerticalDivider(
-                          width: 1,
-                          thickness: 1,
-                          indent: 8,
-                          endIndent: 8,
-                          color: cfo.divider,
-                        ),
-                        Expanded(
-                          child: _TreasuryFlatAction(
-                            icon: Icons.south_west_rounded,
-                            label: 'Deposit',
-                            color: cfo.income,
-                            onTap: () => openAddTransactionSheet(
-                              context,
-                              profile,
-                              initialType: TransactionType.income,
-                            ),
-                          ),
-                        ),
-                        VerticalDivider(
-                          width: 1,
-                          thickness: 1,
-                          indent: 8,
-                          endIndent: 8,
-                          color: cfo.divider,
-                        ),
-                        Expanded(
-                          child: _TreasuryFlatAction(
-                            icon: Icons.north_east_rounded,
-                            label: 'Spend',
-                            color: cfo.expense,
-                            onTap: () => openAddTransactionSheet(
-                              context,
-                              profile,
-                              initialType: TransactionType.expense,
-                            ),
-                          ),
-                        ),
-                      ],
                     ),
                   ),
                 ],
               ],
             ),
-          ],
-        ),
-      ),
+          ),
+        ],
+      ],
     );
   }
 }
@@ -1821,52 +1814,6 @@ class _InlinePortfolioStat extends StatelessWidget {
   }
 }
 
-class _TreasuryFlatAction extends StatelessWidget {
-  const _TreasuryFlatAction({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 6),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 15, color: color),
-            const SizedBox(width: 5),
-            Flexible(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _AccountCard extends StatelessWidget {
   const _AccountCard({
     required this.account,
@@ -1886,8 +1833,6 @@ class _AccountCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cfo = context.cfoColors;
-    final scheme = Theme.of(context).colorScheme;
     final baseCurrency = profile.baseCurrencyCode;
     final canPost =
         profile.permissions.canPostTransaction && !account.isArchived;
@@ -1899,376 +1844,139 @@ class _AccountCard extends StatelessWidget {
           )
         : 0.0;
     final sharePct = (share * 100).round();
-    final (accent, accentBg) = _accountAccent(account.accountType, cfo, scheme);
-    final subtitle =
-        '${account.accountType.label}${account.institutionLabel != null ? ' • ${account.institutionLabel}' : ''}';
 
-    return PressScaleCard(
+    return VirtualAccountVaultCard(
+      account: account,
+      baseCurrency: baseCurrency,
+      sharePercent: sharePct,
+      masked: masked,
       onTap: onTap,
-      padding: EdgeInsets.zero,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 13, 6, 10),
+      trailingMenu: PopupMenuButton<String>(
+        tooltip: 'Account options',
+        iconSize: 19,
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+        icon: Icon(
+          Icons.more_vert_rounded,
+          color: Colors.white.withValues(alpha: 0.80),
+        ),
+        onSelected: (v) async {
+          if (v == 'inspect') onTap();
+          if (v == 'copy') {
+            final spec = CurrencyCatalog.byCode(account.currencyCode);
+            final formatted = account.balance.format(spec: spec);
+            await Clipboard.setData(ClipboardData(text: formatted));
+            if (!context.mounted) return;
+            HapticFeedback.lightImpact();
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                SnackBar(
+                  behavior: SnackBarBehavior.floating,
+                  content: Text('Copied ${account.name} balance ($formatted)'),
+                ),
+              );
+          }
+          if (v == 'archive') onArchive();
+        },
+        itemBuilder: (_) => [
+          const PopupMenuItem(
+            value: 'inspect',
             child: Row(
               children: [
-                IconSquircle(
-                  icon: _accountIcon(account.accountType),
-                  iconColor: accent,
-                  backgroundColor: accentBg,
-                  size: 42,
-                ),
-                const SizedBox(width: 11),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              account.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.w700),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 1.5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: cfo.surfaceTonal,
-                              borderRadius: BorderRadius.circular(
-                                AppSpacing.radiusFull,
-                              ),
-                            ),
-                            child: Text(
-                              account.currencyCode,
-                              style: Theme.of(context).textTheme.labelSmall
-                                  ?.copyWith(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w800,
-                                    color: cfo.subtleText,
-                                  ),
-                            ),
-                          ),
-                          if (account.isArchived) ...[
-                            const SizedBox(width: 5),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 1.5,
-                              ),
-                              decoration: BoxDecoration(
-                                color: cfo.warningContainer,
-                                borderRadius: BorderRadius.circular(
-                                  AppSpacing.radiusFull,
-                                ),
-                              ),
-                              child: Text(
-                                'Archived',
-                                style: Theme.of(context).textTheme.labelSmall
-                                    ?.copyWith(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w700,
-                                      color: cfo.warning,
-                                    ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodySmall?.copyWith(color: cfo.subtleText),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 126),
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerRight,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          AnimatedMoneyText(
-                            money: account.balance,
-                            masked: masked,
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                  color:
-                                      account.isLiability &&
-                                          account.balance.amountMinor > 0
-                                      ? cfo.expense
-                                      : scheme.onSurface,
-                                ),
-                          ),
-                          if (account.currencyCode != baseCurrency)
-                            MoneyText(
-                              money: account.baseBalance,
-                              masked: masked,
-                              style: Theme.of(context).textTheme.labelSmall
-                                  ?.copyWith(color: cfo.subtleText),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                PopupMenuButton<String>(
-                  tooltip: 'Account options',
-                  iconSize: 19,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 32,
-                    minHeight: 32,
-                  ),
-                  icon: Icon(Icons.more_vert_rounded, color: cfo.subtleText),
-                  onSelected: (v) async {
-                    if (v == 'inspect') onTap();
-                    if (v == 'copy') {
-                      final spec = CurrencyCatalog.byCode(account.currencyCode);
-                      final formatted = account.balance.format(spec: spec);
-                      await Clipboard.setData(ClipboardData(text: formatted));
-                      if (!context.mounted) return;
-                      HapticFeedback.lightImpact();
-                      ScaffoldMessenger.of(context)
-                        ..hideCurrentSnackBar()
-                        ..showSnackBar(
-                          SnackBar(
-                            behavior: SnackBarBehavior.floating,
-                            content: Text(
-                              'Copied ${account.name} balance ($formatted)',
-                            ),
-                          ),
-                        );
-                    }
-                    if (v == 'archive') onArchive();
-                  },
-                  itemBuilder: (_) => [
-                    const PopupMenuItem(
-                      value: 'inspect',
-                      child: Row(
-                        children: [
-                          Icon(Icons.receipt_long_rounded, size: 17),
-                          SizedBox(width: 10),
-                          Flexible(
-                            child: Text(
-                              'Statement & Edit',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'copy',
-                      child: Row(
-                        children: [
-                          Icon(Icons.copy_rounded, size: 17),
-                          SizedBox(width: 10),
-                          Flexible(
-                            child: Text(
-                              'Copy Balance',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (!account.isArchived)
-                      const PopupMenuItem(
-                        value: 'archive',
-                        child: Row(
-                          children: [
-                            Icon(Icons.inventory_2_outlined, size: 17),
-                            SizedBox(width: 10),
-                            Flexible(
-                              child: Text(
-                                'Archive account',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          // Dedicated share bar + crisp tabular % readout (zero subtitle truncation)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 0, 14, 11),
-            child: Row(
-              children: [
-                Expanded(
-                  child: AnimatedProgressBar(
-                    value: masked ? 0.0 : share,
-                    color: accent,
-                    height: 5,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  masked ? '••%' : '$sharePct%',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: cfo.subtleText,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 11,
-                    fontFeatures: const [FontFeature.tabularFigures()],
+                Icon(Icons.receipt_long_rounded, size: 17),
+                SizedBox(width: 10),
+                Flexible(
+                  child: Text(
+                    'Statement & Edit',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
           ),
-
-          if (canPost) ...[
-            Divider(height: 1, color: cfo.divider),
-            IntrinsicHeight(
+          const PopupMenuItem(
+            value: 'copy',
+            child: Row(
+              children: [
+                Icon(Icons.copy_rounded, size: 17),
+                SizedBox(width: 10),
+                Flexible(
+                  child: Text(
+                    'Copy Balance',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (!account.isArchived)
+            const PopupMenuItem(
+              value: 'archive',
               child: Row(
                 children: [
-                  Expanded(
-                    child: _CardFlatAction(
-                      icon: Icons.north_east_rounded,
-                      label: 'Spend',
-                      color: cfo.expense,
-                      onTap: () => openAddTransactionSheet(
-                        context,
-                        profile,
-                        initialType: TransactionType.expense,
-                        initialSourceAccountId: account.id,
-                      ),
-                    ),
-                  ),
-                  VerticalDivider(
-                    width: 1,
-                    thickness: 1,
-                    indent: 7,
-                    endIndent: 7,
-                    color: cfo.divider,
-                  ),
-                  Expanded(
-                    child: _CardFlatAction(
-                      icon: Icons.south_west_rounded,
-                      label: 'Receive',
-                      color: cfo.income,
-                      onTap: () => openAddTransactionSheet(
-                        context,
-                        profile,
-                        initialType: TransactionType.income,
-                        initialSourceAccountId: account.id,
-                      ),
-                    ),
-                  ),
-                  VerticalDivider(
-                    width: 1,
-                    thickness: 1,
-                    indent: 7,
-                    endIndent: 7,
-                    color: cfo.divider,
-                  ),
-                  Expanded(
-                    child: _CardFlatAction(
-                      icon: Icons.swap_horiz_rounded,
-                      label: 'Transfer',
-                      color: cfo.transfer,
-                      onTap: () => openAddTransactionSheet(
-                        context,
-                        profile,
-                        initialType: TransactionType.transfer,
-                        initialSourceAccountId: account.id,
-                      ),
-                    ),
-                  ),
-                  VerticalDivider(
-                    width: 1,
-                    thickness: 1,
-                    indent: 7,
-                    endIndent: 7,
-                    color: cfo.divider,
-                  ),
-                  Expanded(
-                    child: _CardFlatAction(
-                      icon: Icons.receipt_long_rounded,
-                      label: 'Activity',
-                      color: scheme.primary,
-                      onTap: onTap,
+                  Icon(Icons.inventory_2_outlined, size: 17),
+                  SizedBox(width: 10),
+                  Flexible(
+                    child: Text(
+                      'Archive account',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
               ),
             ),
-          ],
         ],
       ),
-    );
-  }
-}
-
-class _CardFlatAction extends StatelessWidget {
-  const _CardFlatAction({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 13.5, color: color),
-            const SizedBox(width: 4),
-            Flexible(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 11,
+      bottomBar: canPost
+          ? HeroGlassActionBar(
+              verticalPadding: 10,
+              items: [
+                FintechFlatActionItem(
+                  icon: Icons.north_east_rounded,
+                  label: 'Spend',
+                  color: const Color(0xFFFDA4AF),
+                  onTap: () => openAddTransactionSheet(
+                    context,
+                    profile,
+                    initialType: TransactionType.expense,
+                    initialSourceAccountId: account.id,
                   ),
                 ),
-              ),
-            ),
-          ],
-        ),
-      ),
+                FintechFlatActionItem(
+                  icon: Icons.south_west_rounded,
+                  label: 'Receive',
+                  color: const Color(0xFF6EE7B7),
+                  onTap: () => openAddTransactionSheet(
+                    context,
+                    profile,
+                    initialType: TransactionType.income,
+                    initialSourceAccountId: account.id,
+                  ),
+                ),
+                FintechFlatActionItem(
+                  icon: Icons.swap_horiz_rounded,
+                  label: 'Transfer',
+                  color: const Color(0xFF93C5FD),
+                  onTap: () => openAddTransactionSheet(
+                    context,
+                    profile,
+                    initialType: TransactionType.transfer,
+                    initialSourceAccountId: account.id,
+                  ),
+                ),
+                FintechFlatActionItem(
+                  icon: Icons.receipt_long_rounded,
+                  label: 'Activity',
+                  color: const Color(0xFF7DD3FC),
+                  onTap: onTap,
+                ),
+              ],
+            )
+          : null,
     );
   }
 }

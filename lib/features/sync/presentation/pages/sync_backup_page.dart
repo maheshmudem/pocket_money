@@ -10,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/sync/sync_coordinator.dart';
+import '../../../../shared/widgets/classic_motion.dart';
 import '../../../../shared/widgets/enterprise_layout.dart';
 import '../../../../shared/widgets/fintech_widgets.dart';
 import '../../../../shared/widgets/modern_dialogs.dart';
@@ -84,102 +85,116 @@ class _SyncBackupPageState extends State<SyncBackupPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        if (_statusMsg != null) ...[
-                          PressScaleCard(
-                            padding: const EdgeInsets.all(AppSpacing.sm),
-                            backgroundColor: Theme.of(
-                              context,
-                            ).colorScheme.primaryContainer,
-                            child: Text(_statusMsg!),
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                        ],
-                        PressScaleCard(
-                          padding: const EdgeInsets.all(AppSpacing.md),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              SectionHeader(
-                                title: 'Outbox Queue',
-                                subtitle: 'Active vault: ${profile.name}',
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _OutboxMetricBox(
-                                      label: 'Pending',
-                                      count: q?.pendingCount ?? 0,
-                                      color: cfo.warning,
-                                    ),
+                        ClassicExpandCollapse(
+                          expanded: _statusMsg != null,
+                          child: _statusMsg != null
+                              ? Padding(
+                                  padding: const EdgeInsets.only(
+                                    bottom: AppSpacing.sm,
                                   ),
-                                  const SizedBox(width: AppSpacing.xs),
-                                  Expanded(
-                                    child: _OutboxMetricBox(
-                                      label: 'Synced',
-                                      count: q?.syncedCount ?? 0,
-                                      color: cfo.success,
+                                  child: PressScaleCard(
+                                    padding: const EdgeInsets.all(
+                                      AppSpacing.sm,
                                     ),
+                                    backgroundColor: Theme.of(
+                                      context,
+                                    ).colorScheme.primaryContainer,
+                                    child: Text(_statusMsg!),
                                   ),
-                                ],
-                              ),
-                              const SizedBox(height: AppSpacing.xs),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _OutboxMetricBox(
-                                      label: 'Retries',
-                                      count:
-                                          (q?.retryableErrorCount ?? 0) +
-                                          (q?.permanentErrorCount ?? 0),
-                                      color: cfo.transfer,
-                                    ),
-                                  ),
-                                  const SizedBox(width: AppSpacing.xs),
-                                  Expanded(
-                                    child: _OutboxMetricBox(
-                                      label: 'Conflicts',
-                                      count: q?.conflictCount ?? 0,
-                                      color: cfo.expense,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              if (q?.lastPulledAtUtc != null) ...[
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+                        StaggeredFadeSlide(
+                          index: 0,
+                          child: PressScaleCard(
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                SectionHeader(
+                                  title: 'Outbox Queue',
+                                  subtitle: 'Active vault: ${profile.name}',
+                                ),
                                 const SizedBox(height: AppSpacing.sm),
-                                Text(
-                                  'Last pulled: ${UiDateFormatter.shortDayMonthYear(q!.lastPulledAtUtc!)}',
-                                  style: Theme.of(context).textTheme.labelSmall
-                                      ?.copyWith(color: cfo.subtleText),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _OutboxMetricBox(
+                                        label: 'Pending',
+                                        count: q?.pendingCount ?? 0,
+                                        color: cfo.warning,
+                                      ),
+                                    ),
+                                    const SizedBox(width: AppSpacing.xs),
+                                    Expanded(
+                                      child: _OutboxMetricBox(
+                                        label: 'Synced',
+                                        count: q?.syncedCount ?? 0,
+                                        color: cfo.success,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: AppSpacing.xs),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _OutboxMetricBox(
+                                        label: 'Retries',
+                                        count:
+                                            (q?.retryableErrorCount ?? 0) +
+                                            (q?.permanentErrorCount ?? 0),
+                                        color: cfo.transfer,
+                                      ),
+                                    ),
+                                    const SizedBox(width: AppSpacing.xs),
+                                    Expanded(
+                                      child: _OutboxMetricBox(
+                                        label: 'Conflicts',
+                                        count: q?.conflictCount ?? 0,
+                                        color: cfo.expense,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                if (q?.lastPulledAtUtc != null) ...[
+                                  const SizedBox(height: AppSpacing.sm),
+                                  Text(
+                                    'Last pulled: ${UiDateFormatter.shortDayMonthYear(q!.lastPulledAtUtc!)}',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall
+                                        ?.copyWith(color: cfo.subtleText),
+                                  ),
+                                ],
+                                const SizedBox(height: AppSpacing.md),
+                                FilledButton.icon(
+                                  onPressed: _syncing
+                                      ? null
+                                      : () async {
+                                          setState(() {
+                                            _syncing = true;
+                                            _statusMsg = null;
+                                          });
+                                          final res = await sync
+                                              .synchronizeProfile(profile.id);
+                                          setState(() {
+                                            _syncing = false;
+                                            _statusMsg = res.fold(
+                                              onSuccess: (s) =>
+                                                  'Sync done: ${s.pushedAccepted} accepted, ${s.pushedDuplicates} duplicate replays, ${s.pushedConflicts} conflicts, ${s.pulledChanges} pulled.',
+                                              onFailure: (f) => f.message,
+                                            );
+                                          });
+                                          _reload();
+                                        },
+                                  icon: const Icon(Icons.sync_rounded),
+                                  label: Text(
+                                    _syncing ? 'Syncing...' : 'Sync Now',
+                                  ),
                                 ),
                               ],
-                              const SizedBox(height: AppSpacing.md),
-                              FilledButton.icon(
-                                onPressed: _syncing
-                                    ? null
-                                    : () async {
-                                        setState(() {
-                                          _syncing = true;
-                                          _statusMsg = null;
-                                        });
-                                        final res = await sync
-                                            .synchronizeProfile(profile.id);
-                                        setState(() {
-                                          _syncing = false;
-                                          _statusMsg = res.fold(
-                                            onSuccess: (s) =>
-                                                'Sync done: ${s.pushedAccepted} accepted, ${s.pushedDuplicates} duplicate replays, ${s.pushedConflicts} conflicts, ${s.pulledChanges} pulled.',
-                                            onFailure: (f) => f.message,
-                                          );
-                                        });
-                                        _reload();
-                                      },
-                                icon: const Icon(Icons.sync_rounded),
-                                label: Text(
-                                  _syncing ? 'Syncing...' : 'Sync Now',
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                         ),
                         if (q != null && q.openConflicts.isNotEmpty) ...[
@@ -252,76 +267,80 @@ class _SyncBackupPageState extends State<SyncBackupPage> {
               padding: EnterprisePageContainer.responsivePadding(context),
               child: EnterprisePageContainer(
                 maxWidth: AppBreakpoints.maxReadingWidth,
-                child: PressScaleCard(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Row(
-                        children: [
-                          IconSquircle(
-                            icon: Icons.enhanced_encryption_rounded,
-                            iconColor: cfo.success,
-                            backgroundColor: cfo.successContainer,
-                            size: 48,
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Encrypted Local Backup (.pcfo)',
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.titleMedium,
-                                ),
-                                Text(
-                                  'PBKDF2 + AES-256-GCM + SHA-256 manifest',
-                                  style: Theme.of(context).textTheme.labelSmall
-                                      ?.copyWith(color: cfo.subtleText),
-                                ),
-                              ],
+                child: StaggeredFadeSlide(
+                  index: 0,
+                  child: PressScaleCard(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
+                            IconSquircle(
+                              icon: Icons.enhanced_encryption_rounded,
+                              iconColor: cfo.success,
+                              backgroundColor: cfo.successContainer,
+                              size: 48,
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      Text(
-                        'Passphrases are never stored on-device or in the cloud. If lost, the encrypted archive cannot be decrypted.',
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodySmall?.copyWith(color: cfo.subtleText),
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      FilledButton.icon(
-                        onPressed: _backupBusy
-                            ? null
-                            : () => _exportBackup(context, backup),
-                        icon: _backupBusy
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.lock_outline_rounded),
-                        label: Text(
-                          _backupBusy
-                              ? 'Working on encrypted archive...'
-                              : 'Export Encrypted Backup (.pcfo)',
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Encrypted Local Backup (.pcfo)',
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleMedium,
+                                  ),
+                                  Text(
+                                    'PBKDF2 + AES-256-GCM + SHA-256 manifest',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall
+                                        ?.copyWith(color: cfo.subtleText),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      OutlinedButton.icon(
-                        onPressed: _backupBusy
-                            ? null
-                            : () => _restoreBackup(context, backup),
-                        icon: const Icon(Icons.restore_rounded),
-                        label: const Text('Validate & Restore Backup'),
-                      ),
-                    ],
+                        const SizedBox(height: AppSpacing.md),
+                        Text(
+                          'Passphrases are never stored on-device or in the cloud. If lost, the encrypted archive cannot be decrypted.',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: cfo.subtleText),
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        FilledButton.icon(
+                          onPressed: _backupBusy
+                              ? null
+                              : () => _exportBackup(context, backup),
+                          icon: _backupBusy
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.lock_outline_rounded),
+                          label: Text(
+                            _backupBusy
+                                ? 'Working on encrypted archive...'
+                                : 'Export Encrypted Backup (.pcfo)',
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        OutlinedButton.icon(
+                          onPressed: _backupBusy
+                              ? null
+                              : () => _restoreBackup(context, backup),
+                          icon: const Icon(Icons.restore_rounded),
+                          label: const Text('Validate & Restore Backup'),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -564,12 +583,11 @@ class _OutboxMetricBox extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 2),
-          Text(
-            '$count',
+          ClassicAnimatedCount(
+            value: count,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
               color: color,
               fontWeight: FontWeight.w800,
-              fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
         ],

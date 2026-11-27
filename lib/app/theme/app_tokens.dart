@@ -50,48 +50,48 @@ final class PocketCfoColors extends ThemeExtension<PocketCfoColors> {
 
   static const light = PocketCfoColors(
     income: Color(0xFF047857),
-    incomeContainer: Color(0xFFDCFCE7),
-    expense: Color(0xFFC81E3A),
-    expenseContainer: Color(0xFFFFE4E6),
-    warning: Color(0xFFB45309),
-    warningContainer: Color(0xFFFEF3C7),
+    incomeContainer: Color(0xFFE6F7F1),
+    expense: Color(0xFFBE123C),
+    expenseContainer: Color(0xFFFDECEF),
+    warning: Color(0xFFB47B1C),
+    warningContainer: Color(0xFFFDF5E2),
     success: Color(0xFF047857),
-    successContainer: Color(0xFFD1FAE5),
-    transfer: Color(0xFF1D4ED8),
-    transferContainer: Color(0xFFDBEAFE),
+    successContainer: Color(0xFFE6F7F1),
+    transfer: Color(0xFF1A4596),
+    transferContainer: Color(0xFFEBF1FF),
     surfaceElevated: Color(0xFFFFFFFF),
-    surfaceTonal: Color(0xFFEEF2F8),
-    subtleText: Color(0xFF475569),
-    divider: Color(0xFFE2E8F0),
-    heroGradientStart: Color(0xFF312E81),
-    heroGradientEnd: Color(0xFF4F46E5),
-    accentCyan: Color(0xFF0EA5E9),
-    cardShadow: Color(0x0C0F172A),
-    hoverBorder: Color(0xFF818CF8),
-    hoverSurface: Color(0xFFF8FAFF),
+    surfaceTonal: Color(0xFFF0F2F8),
+    subtleText: Color(0xFF5A647B),
+    divider: Color(0xFFE3E7F2),
+    heroGradientStart: Color(0xFF081530),
+    heroGradientEnd: Color(0xFF173875),
+    accentCyan: Color(0xFFC8962E),
+    cardShadow: Color(0x110B1B3D),
+    hoverBorder: Color(0xFFC6D0E5),
+    hoverSurface: Color(0xFFF8F9FD),
   );
 
   static const dark = PocketCfoColors(
-    income: Color(0xFF34D399),
-    incomeContainer: Color(0xFF064E3B),
+    income: Color(0xFF2DD4A8),
+    incomeContainer: Color(0xFF0A2A22),
     expense: Color(0xFFFB7185),
-    expenseContainer: Color(0xFF4C0519),
-    warning: Color(0xFFFBBF24),
-    warningContainer: Color(0xFF451A03),
-    success: Color(0xFF34D399),
-    successContainer: Color(0xFF064E3B),
-    transfer: Color(0xFF60A5FA),
-    transferContainer: Color(0xFF1E3A8A),
-    surfaceElevated: Color(0xFF111827),
-    surfaceTonal: Color(0xFF1E293B),
-    subtleText: Color(0xFF94A3B8),
-    divider: Color(0xFF1F2937),
-    heroGradientStart: Color(0xFF151336),
-    heroGradientEnd: Color(0xFF3730A3),
-    accentCyan: Color(0xFF38BDF8),
-    cardShadow: Color(0x38000000),
-    hoverBorder: Color(0xFF6366F1),
-    hoverSurface: Color(0xFF172033),
+    expenseContainer: Color(0xFF34131E),
+    warning: Color(0xFFE8C468),
+    warningContainer: Color(0xFF2D220E),
+    success: Color(0xFF2DD4A8),
+    successContainer: Color(0xFF0A2A22),
+    transfer: Color(0xFF6DA6FF),
+    transferContainer: Color(0xFF122344),
+    surfaceElevated: Color(0xFF0F1626),
+    surfaceTonal: Color(0xFF162036),
+    subtleText: Color(0xFF93A1BC),
+    divider: Color(0xFF1F2D49),
+    heroGradientStart: Color(0xFF0A1836),
+    heroGradientEnd: Color(0xFF193C7D),
+    accentCyan: Color(0xFFE8C468),
+    cardShadow: Color(0x5A020612),
+    hoverBorder: Color(0xFF2E4166),
+    hoverSurface: Color(0xFF141D31),
   );
 
   @override
@@ -221,11 +221,25 @@ abstract final class AppBreakpoints {
   static const double maxReadingWidth = 920;
 }
 
-/// Motion duration tokens respecting OS reduced-motion preferences (`ANIMATION_MOTION_GUIDELINES.md`).
+/// Motion duration & curve tokens respecting OS reduced-motion preferences (`ANIMATION_MOTION_GUIDELINES.md`).
 abstract final class AppMotion {
   static const Duration fast = Duration(milliseconds: 140);
   static const Duration standard = Duration(milliseconds: 220);
   static const Duration emphasis = Duration(milliseconds: 320);
+  static const Duration page = Duration(milliseconds: 280);
+  static const Duration pageReverse = Duration(milliseconds: 220);
+
+  /// Classic silky deceleration curve for standard UI transitions.
+  static const Curve curveStandard = Curves.easeOutCubic;
+
+  /// Classic emphasized decelerate curve (`M3 Emphasized Decelerate`).
+  static const Curve curveEmphasized = Cubic(0.2, 0.0, 0.0, 1.0);
+
+  /// Fast accelerate curve for outgoing views.
+  static const Curve curveExit = Cubic(0.3, 0.0, 0.8, 0.15);
+
+  /// Refined spring-like settle without cartoonish bounce.
+  static const Curve curveSpring = Cubic(0.22, 1.0, 0.36, 1.0);
 
   static Duration resolve(BuildContext context, Duration preferred) {
     return MediaQuery.disableAnimationsOf(context) ? Duration.zero : preferred;

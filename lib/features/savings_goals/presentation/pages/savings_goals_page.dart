@@ -5,8 +5,10 @@ import 'package:get_it/get_it.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/financial_engine/currency.dart';
 import '../../../../core/financial_engine/money.dart';
+import '../../../../shared/widgets/classic_motion.dart';
 import '../../../../shared/widgets/enterprise_layout.dart';
 import '../../../../shared/widgets/fintech_widgets.dart';
+import '../../../../shared/widgets/flagship_visuals.dart';
 import '../../../../shared/widgets/modern_dialogs.dart';
 import '../../../../shared/widgets/modern_dropdown.dart';
 import '../../../../shared/widgets/modern_inputs.dart';
@@ -17,6 +19,7 @@ import '../../../notifications/data/financial_alerts_coordinator.dart';
 import '../../../profiles/domain/entities/profile_entity.dart';
 import '../../../profiles/presentation/bloc/active_profile_cubit.dart';
 import '../../../settings/presentation/bloc/settings_cubit.dart';
+import '../../../transactions/presentation/bloc/transactions_bloc.dart';
 import '../../domain/entities/savings_goal_entity.dart';
 import '../../domain/repositories/savings_goal_repository.dart';
 
@@ -77,254 +80,326 @@ class _SavingsGoalsPageState extends State<SavingsGoalsPage> {
 
     return Scaffold(
       appBar: const EnterpriseAppBar(title: Text('Savings Goals')),
-      floatingActionButton: hasGoals && canPost
-          ? FloatingActionButton.extended(
-              onPressed: () => _openCreateGoalSheet(context, profile),
-              icon: const Icon(Icons.add_rounded),
-              label: const Text('New Goal'),
-            )
-          : null,
-      body: _loading && _goals == null
-          ? const DashboardSkeletonView()
-          : !hasGoals
-          ? EmptyStateView(
-              icon: Icons.savings_outlined,
-              title: 'No savings goals yet',
-              description:
-                  'Track emergency funds, travel, or capital reserves via ring-fenced allocations or real ledger transfers into a dedicated savings account.',
-              actionLabel: canPost ? 'Create Goal' : null,
-              onAction: canPost
-                  ? () => _openCreateGoalSheet(context, profile)
-                  : null,
-            )
-          : RefreshIndicator(
-              onRefresh: () => _reload(profile),
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: EnterprisePageContainer.responsivePadding(
-                  context,
-                  bottom: 96,
-                ),
-                child: EnterprisePageContainer(
-                  maxWidth: AppBreakpoints.maxContentWidth,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final twoCols = constraints.maxWidth >= 680;
-                      final cardWidth = twoCols
-                          ? (constraints.maxWidth - AppSpacing.sm) / 2
-                          : constraints.maxWidth;
+      floatingActionButton: ClassicAnimatedFab(
+        child: hasGoals && canPost
+            ? FloatingActionButton.extended(
+                key: const ValueKey<String>('goals_fab'),
+                onPressed: () => _openCreateGoalSheet(context, profile),
+                icon: const Icon(Icons.add_rounded),
+                label: const Text('New Goal'),
+              )
+            : null,
+      ),
+      body: ClassicContentSwitcher(
+        stateKey: _loading && _goals == null
+            ? 'loading'
+            : !hasGoals
+            ? 'empty'
+            : 'loaded',
+        child: _loading && _goals == null
+            ? const DashboardSkeletonView()
+            : !hasGoals
+            ? EmptyStateView(
+                icon: Icons.savings_outlined,
+                title: 'No savings goals yet',
+                description:
+                    'Track emergency funds, travel, or capital reserves via ring-fenced allocations or real ledger transfers into a dedicated savings account.',
+                actionLabel: canPost ? 'Create Goal' : null,
+                onAction: canPost
+                    ? () => _openCreateGoalSheet(context, profile)
+                    : null,
+              )
+            : RefreshIndicator(
+                onRefresh: () => _reload(profile),
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: EnterprisePageContainer.responsivePadding(
+                    context,
+                    bottom: 96,
+                  ),
+                  child: EnterprisePageContainer(
+                    maxWidth: AppBreakpoints.maxContentWidth,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final twoCols = constraints.maxWidth >= 680;
+                        final cardWidth = twoCols
+                            ? (constraints.maxWidth - AppSpacing.sm) / 2
+                            : constraints.maxWidth;
 
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          StaggeredFadeSlide(
-                            index: 0,
-                            child: PressScaleCard(
-                              padding: const EdgeInsets.all(AppSpacing.md),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Total Vault Progress (${goals.length})',
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.titleMedium,
-                                  ),
-                                  const SizedBox(height: AppSpacing.xs),
-                                  AnimatedProgressBar(
-                                    value: hideBalances
-                                        ? 0.0
-                                        : (totalTargetMinor > 0
-                                              ? (totalSavedMinor /
-                                                        totalTargetMinor)
-                                                    .clamp(0.0, 1.0)
-                                              : 0.0),
-                                    color: cfo.income,
-                                  ),
-                                  const SizedBox(height: AppSpacing.xs),
-                                  Text(
-                                    'Saved ${Money(amountMinor: totalSavedMinor, currencyCode: profile.baseCurrencyCode).format(mask: hideBalances)} of ${Money(amountMinor: totalTargetMinor, currencyCode: profile.baseCurrencyCode).format(mask: hideBalances)}',
-                                    style: Theme.of(context).textTheme.bodySmall
-                                        ?.copyWith(color: cfo.subtleText),
-                                  ),
-                                ],
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            StaggeredFadeSlide(
+                              index: 0,
+                              child: FintechSignatureHero(
+                                tone: SignatureHeroTone.emerald,
+                                padding: const EdgeInsets.all(AppSpacing.md),
+                                child: Row(
+                                  children: [
+                                    RadialScoreGauge(
+                                      score: totalTargetMinor > 0
+                                          ? ((totalSavedMinor /
+                                                        totalTargetMinor) *
+                                                    100)
+                                                .round()
+                                                .clamp(0, 100)
+                                          : 0,
+                                      label: 'FUNDED',
+                                      activeColor: const Color(0xFF34D399),
+                                      secondaryColor: const Color(0xFF38BDF8),
+                                      trackColor: Colors.white.withValues(
+                                        alpha: 0.14,
+                                      ),
+                                      textColor: Colors.white,
+                                      subtitleColor: Colors.white.withValues(
+                                        alpha: 0.70,
+                                      ),
+                                      size: 80,
+                                      strokeWidth: 7,
+                                      masked: hideBalances,
+                                    ),
+                                    const SizedBox(width: 14),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Total Vault Progress (${goals.length})',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleSmall
+                                                ?.copyWith(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.w800,
+                                                ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            alignment: Alignment.centerLeft,
+                                            child: AnimatedMoneyText(
+                                              money: Money(
+                                                amountMinor: totalSavedMinor,
+                                                currencyCode:
+                                                    profile.baseCurrencyCode,
+                                              ),
+                                              masked: hideBalances,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .headlineSmall
+                                                  ?.copyWith(
+                                                    color: const Color(
+                                                      0xFF6EE7B7,
+                                                    ),
+                                                    fontWeight: FontWeight.w900,
+                                                  ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 3),
+                                          Text(
+                                            'Saved ${Money(amountMinor: totalSavedMinor, currencyCode: profile.baseCurrencyCode).format(mask: hideBalances)} of ${Money(amountMinor: totalTargetMinor, currencyCode: profile.baseCurrencyCode).format(mask: hideBalances)}',
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .labelSmall
+                                                ?.copyWith(
+                                                  color: Colors.white
+                                                      .withValues(alpha: 0.72),
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          Wrap(
-                            spacing: AppSpacing.sm,
-                            runSpacing: AppSpacing.sm,
-                            children: [
-                              for (var idx = 0; idx < goals.length; idx++)
-                                SizedBox(
-                                  width: cardWidth,
-                                  child: Builder(
-                                    builder: (context) {
-                                      final g = goals[idx];
-                                      final pct = (g.progressRatio * 100)
-                                          .round();
-                                      final completed = g.progressRatio >= 1.0;
-                                      return StaggeredFadeSlide(
-                                        index: idx + 1,
-                                        child: PressScaleCard(
-                                          padding: const EdgeInsets.all(
-                                            AppSpacing.md,
-                                          ),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Row(
-                                                children: [
-                                                  IconSquircle(
-                                                    icon: completed
-                                                        ? Icons
-                                                              .emoji_events_rounded
-                                                        : Icons.savings_rounded,
-                                                    iconColor: cfo.income,
-                                                    backgroundColor:
-                                                        cfo.incomeContainer,
-                                                    size: 40,
-                                                  ),
-                                                  const SizedBox(
-                                                    width: AppSpacing.sm,
-                                                  ),
-                                                  Expanded(
-                                                    child: Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        Text(
-                                                          g.name,
-                                                          maxLines: 1,
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
-                                                          style:
-                                                              Theme.of(context)
-                                                                  .textTheme
-                                                                  .titleMedium,
-                                                        ),
-                                                        Text(
-                                                          '${g.fundingMode.label}${g.linkedAccountName != null ? ' • ${g.linkedAccountName}' : ''}',
-                                                          maxLines: 1,
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
-                                                          style: Theme.of(context)
-                                                              .textTheme
-                                                              .bodySmall
-                                                              ?.copyWith(
-                                                                color: cfo
-                                                                    .subtleText,
-                                                              ),
-                                                        ),
-                                                      ],
+                            const SizedBox(height: AppSpacing.md),
+                            Wrap(
+                              spacing: AppSpacing.sm,
+                              runSpacing: AppSpacing.sm,
+                              children: [
+                                for (var idx = 0; idx < goals.length; idx++)
+                                  SizedBox(
+                                    width: cardWidth,
+                                    child: Builder(
+                                      builder: (context) {
+                                        final g = goals[idx];
+                                        final pct = (g.progressRatio * 100)
+                                            .round();
+                                        final completed =
+                                            g.progressRatio >= 1.0;
+                                        return StaggeredFadeSlide(
+                                          index: idx + 1,
+                                          child: PressScaleCard(
+                                            padding: const EdgeInsets.all(
+                                              AppSpacing.md,
+                                            ),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    IconSquircle(
+                                                      icon: completed
+                                                          ? Icons
+                                                                .emoji_events_rounded
+                                                          : Icons
+                                                                .savings_rounded,
+                                                      iconColor: cfo.income,
+                                                      backgroundColor:
+                                                          cfo.incomeContainer,
+                                                      size: 40,
                                                     ),
-                                                  ),
-                                                  const SizedBox(width: 6),
-                                                  FintechStatusPill(
-                                                    label: hideBalances
-                                                        ? '••%'
-                                                        : (completed
-                                                              ? 'Achieved $pct%'
-                                                              : '$pct%'),
-                                                    showDot: completed,
-                                                    foreground: cfo.income,
-                                                    background:
-                                                        cfo.incomeContainer,
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(
-                                                height: AppSpacing.sm,
-                                              ),
-                                              AnimatedProgressBar(
-                                                value: hideBalances
-                                                    ? 0.0
-                                                    : g.progressRatio,
-                                                color: cfo.income,
-                                              ),
-                                              const SizedBox(
-                                                height: AppSpacing.xs,
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Flexible(
-                                                    child: Text(
-                                                      'Saved: ${g.contributedAmount.format(mask: hideBalances)}',
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                      style: Theme.of(context)
-                                                          .textTheme
-                                                          .bodySmall
-                                                          ?.copyWith(
-                                                            fontWeight:
-                                                                FontWeight.w600,
+                                                    const SizedBox(
+                                                      width: AppSpacing.sm,
+                                                    ),
+                                                    Expanded(
+                                                      child: Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          Text(
+                                                            g.name,
+                                                            maxLines: 1,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                            style:
+                                                                Theme.of(
+                                                                      context,
+                                                                    )
+                                                                    .textTheme
+                                                                    .titleMedium,
                                                           ),
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  Flexible(
-                                                    child: Text(
-                                                      'Target: ${g.targetAmount.format(mask: hideBalances)}',
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                      style: Theme.of(context)
-                                                          .textTheme
-                                                          .bodySmall
-                                                          ?.copyWith(
-                                                            color:
-                                                                cfo.subtleText,
+                                                          Text(
+                                                            '${g.fundingMode.label}${g.linkedAccountName != null ? ' • ${g.linkedAccountName}' : ''}',
+                                                            maxLines: 1,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                            style: Theme.of(context)
+                                                                .textTheme
+                                                                .bodySmall
+                                                                ?.copyWith(
+                                                                  color: cfo
+                                                                      .subtleText,
+                                                                ),
                                                           ),
+                                                        ],
+                                                      ),
                                                     ),
-                                                  ),
-                                                ],
-                                              ),
-                                              if (canPost) ...[
+                                                    const SizedBox(width: 6),
+                                                    FintechStatusPill(
+                                                      label: hideBalances
+                                                          ? '••%'
+                                                          : (completed
+                                                                ? 'Achieved $pct%'
+                                                                : '$pct%'),
+                                                      showDot: completed,
+                                                      foreground: cfo.income,
+                                                      background:
+                                                          cfo.incomeContainer,
+                                                    ),
+                                                  ],
+                                                ),
                                                 const SizedBox(
                                                   height: AppSpacing.sm,
                                                 ),
-                                                Align(
-                                                  alignment:
-                                                      Alignment.centerRight,
-                                                  child: FilledButton.tonalIcon(
-                                                    onPressed: () =>
-                                                        _openContributeSheet(
-                                                          context,
-                                                          profile,
-                                                          g,
-                                                        ),
-                                                    icon: const Icon(
-                                                      Icons
-                                                          .add_circle_outline_rounded,
-                                                      size: 18,
+                                                AnimatedProgressBar(
+                                                  value: hideBalances
+                                                      ? 0.0
+                                                      : g.progressRatio,
+                                                  color: cfo.income,
+                                                ),
+                                                const SizedBox(
+                                                  height: AppSpacing.xs,
+                                                ),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    Flexible(
+                                                      child: Text(
+                                                        'Saved: ${g.contributedAmount.format(mask: hideBalances)}',
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                        style: Theme.of(context)
+                                                            .textTheme
+                                                            .bodySmall
+                                                            ?.copyWith(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            ),
+                                                      ),
                                                     ),
-                                                    label: const Text(
-                                                      'Add Contribution',
+                                                    const SizedBox(width: 8),
+                                                    Flexible(
+                                                      child: Text(
+                                                        'Target: ${g.targetAmount.format(mask: hideBalances)}',
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                        style: Theme.of(context)
+                                                            .textTheme
+                                                            .bodySmall
+                                                            ?.copyWith(
+                                                              color: cfo
+                                                                  .subtleText,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                if (canPost) ...[
+                                                  const SizedBox(
+                                                    height: AppSpacing.sm,
+                                                  ),
+                                                  Align(
+                                                    alignment:
+                                                        Alignment.centerRight,
+                                                    child: FilledButton.tonalIcon(
+                                                      onPressed: () =>
+                                                          _openContributeSheet(
+                                                            context,
+                                                            profile,
+                                                            g,
+                                                          ),
+                                                      icon: const Icon(
+                                                        Icons
+                                                            .add_circle_outline_rounded,
+                                                        size: 18,
+                                                      ),
+                                                      label: const Text(
+                                                        'Add Contribution',
+                                                      ),
                                                     ),
                                                   ),
-                                                ),
+                                                ],
                                               ],
-                                            ],
+                                            ),
                                           ),
-                                        ),
-                                      );
-                                    },
+                                        );
+                                      },
+                                    ),
                                   ),
-                                ),
-                            ],
-                          ),
-                        ],
-                      );
-                    },
+                              ],
+                            ),
+                          ],
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
-            ),
+      ),
     );
   }
 
@@ -745,9 +820,16 @@ class _ContributeSheetBodyState extends State<_ContributeSheetBody> {
                           'Contribution saved to ${goal.name}.',
                           tone: FintechToastTone.success,
                         );
-                        context.read<DashboardBloc>().add(
-                          const DashboardRefreshRequested(),
-                        );
+                        try {
+                          context.read<DashboardBloc>().add(
+                            const DashboardRefreshRequested(),
+                          );
+                        } catch (_) {}
+                        try {
+                          context.read<TransactionsBloc>().add(
+                            const TransactionsLoadRequested(),
+                          );
+                        } catch (_) {}
                         Navigator.of(context).pop();
                         await widget.onSaved();
                       },

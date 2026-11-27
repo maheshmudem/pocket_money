@@ -95,6 +95,7 @@ final class BackupRestoreService {
         'recurring_rules': await dumpTable('recurring_rules'),
         'loans': await dumpTable('loans'),
         'loan_installments': await dumpTable('loan_installments'),
+        'bucket_list_items': await dumpTable('bucket_list_items'),
       };
 
       final archive = await _crypto.encryptBackup(
@@ -278,6 +279,7 @@ final class BackupRestoreService {
         'recurring_rules',
         'loans',
         'loan_installments',
+        'bucket_list_items',
       ];
       for (final table in secondaryTables) {
         final rows = (payload[table] as List<dynamic>? ?? const [])

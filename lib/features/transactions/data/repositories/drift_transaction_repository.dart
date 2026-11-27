@@ -623,6 +623,9 @@ final class DriftTransactionRepository implements TransactionRepository {
         }
       }
 
+      final runningSnapshots = await _computeRunningBalanceSnapshots(profileId);
+      final snap = runningSnapshots[row.id];
+
       return Success(
         _mapTransaction(
           row,
@@ -642,6 +645,8 @@ final class DriftTransactionRepository implements TransactionRepository {
               .toList(),
           postings: postings,
           journalStatus: jeRow?.status,
+          runningBalanceBefore: snap?.before,
+          runningBalanceAfter: snap?.after,
         ),
       );
     } catch (_) {
@@ -751,6 +756,10 @@ final class DriftTransactionRepository implements TransactionRepository {
         }
       }
 
+      final runningSnapshots = rows.isEmpty
+          ? const <String, ({Money before, Money after})>{}
+          : await _computeRunningBalanceSnapshots(profileId);
+
       final items = rows
           .map(
             (r) => _mapTransaction(
@@ -759,6 +768,8 @@ final class DriftTransactionRepository implements TransactionRepository {
               categoriesMap: categoriesMap,
               splits: splitsMap[r.id] ?? const [],
               journalStatus: jeStatusMap[r.id],
+              runningBalanceBefore: runningSnapshots[r.id]?.before,
+              runningBalanceAfter: runningSnapshots[r.id]?.after,
             ),
           )
           .toList();
@@ -1259,6 +1270,73 @@ final class DriftTransactionRepository implements TransactionRepository {
     return {for (final r in rows) r.id: r.name};
   }
 
+  /// Computes chronological passbook account balances (`before` → `after`)
+  /// strictly from posted double-entry ledger postings so every transaction row
+  /// reflects the true historical account balance even under filtered views.
+  Future<Map<String, ({Money before, Money after})>>
+  _computeRunningBalanceSnapshots(ProfileId profileId) async {
+    final rows = await _db
+        .customSelect(
+          '''
+          SELECT
+            t.id AS tx_id,
+            t.source_account_id AS source_account_id,
+            t.destination_account_id AS destination_account_id,
+            fa.id AS account_id,
+            fa.currency_code AS account_currency,
+            la.normal_balance AS normal_balance,
+            COALESCE(SUM(CASE WHEN lp.side = 'debit' THEN lp.original_amount_minor ELSE 0 END), 0) AS orig_debits,
+            COALESCE(SUM(CASE WHEN lp.side = 'credit' THEN lp.original_amount_minor ELSE 0 END), 0) AS orig_credits
+          FROM transactions t
+          INNER JOIN journal_entries je
+            ON je.transaction_id = t.id AND je.profile_id = t.profile_id
+          INNER JOIN ledger_postings lp
+            ON lp.journal_entry_id = je.id AND lp.profile_id = je.profile_id
+          INNER JOIN financial_accounts fa
+            ON fa.ledger_account_id = lp.ledger_account_id AND fa.profile_id = lp.profile_id
+          INNER JOIN ledger_accounts la
+            ON la.id = fa.ledger_account_id AND la.profile_id = fa.profile_id
+          WHERE t.profile_id = ?
+            AND t.deleted_at_utc IS NULL
+            AND je.status IN ('posted', 'reversed')
+          GROUP BY t.id, fa.id
+          ORDER BY t.transaction_date_utc ASC, t.created_at_utc ASC, t.id ASC
+          ''',
+          variables: [Variable.withString(profileId.value)],
+        )
+        .get();
+
+    final runningByAccount = <String, int>{};
+    final result = <String, ({Money before, Money after})>{};
+
+    for (final r in rows) {
+      final txId = r.read<String>('tx_id');
+      final sourceAccId = r.readNullable<String>('source_account_id');
+      final destAccId = r.readNullable<String>('destination_account_id');
+      final accountId = r.read<String>('account_id');
+      final currency = r.read<String>('account_currency');
+      final normalBalance = r.read<String>('normal_balance');
+      final debits = r.read<int>('orig_debits');
+      final credits = r.read<int>('orig_credits');
+
+      final delta = normalBalance == 'debit'
+          ? (debits - credits)
+          : (credits - debits);
+      final beforeMinor = runningByAccount[accountId] ?? 0;
+      final afterMinor = beforeMinor + delta;
+      runningByAccount[accountId] = afterMinor;
+
+      final preferredAccountId = sourceAccId ?? destAccId ?? accountId;
+      if (accountId == preferredAccountId || !result.containsKey(txId)) {
+        result[txId] = (
+          before: Money(amountMinor: beforeMinor, currencyCode: currency),
+          after: Money(amountMinor: afterMinor, currencyCode: currency),
+        );
+      }
+    }
+    return result;
+  }
+
   TransactionEntity _mapTransaction(
     Transaction row, {
     required Map<String, String> accountsMap,
@@ -1266,6 +1344,8 @@ final class DriftTransactionRepository implements TransactionRepository {
     List<TransactionSplitEntity> splits = const [],
     List<PostingDetail> postings = const [],
     String? journalStatus,
+    Money? runningBalanceBefore,
+    Money? runningBalanceAfter,
   }) {
     return TransactionEntity(
       id: row.id,
@@ -1314,6 +1394,8 @@ final class DriftTransactionRepository implements TransactionRepository {
       splits: splits,
       postings: postings,
       journalStatus: journalStatus,
+      runningBalanceBefore: runningBalanceBefore,
+      runningBalanceAfter: runningBalanceAfter,
     );
   }
 }

@@ -20,5 +20,28 @@ abstract interface class BudgetRepository {
     String? endDateUtc,
   });
 
+  Future<Result<BudgetEntity>> updateBudget({
+    required ProfileId profileId,
+    required String budgetId,
+    required String name,
+    required BudgetPeriodType periodType,
+    required int overallLimitMinor,
+    required Map<String, int> categoryLimitsMinor,
+    required bool rolloverEnabled,
+    String? startDateUtc,
+    String? endDateUtc,
+  });
+
+  /// Atomically shifts [amountMinor] from a source category envelope to a target
+  /// category envelope (either within the same Master Budget or across two budgets).
+  Future<Result<void>> reallocateCategoryLimit({
+    required ProfileId profileId,
+    required String fromBudgetId,
+    required String fromCategoryId,
+    required String toBudgetId,
+    required String toCategoryId,
+    required int amountMinor,
+  });
+
   Future<Result<void>> deleteBudget(ProfileId profileId, String budgetId);
 }

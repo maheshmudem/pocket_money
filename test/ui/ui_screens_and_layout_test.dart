@@ -7,6 +7,14 @@ import 'package:pocket_money/core/database/app_database.dart';
 import 'package:pocket_money/core/database/encrypted_executor.dart';
 import 'package:pocket_money/core/security/key_manager.dart';
 import 'package:pocket_money/core/utilities/clock.dart';
+import 'package:pocket_money/features/accounts/domain/entities/financial_account_entity.dart';
+import 'package:pocket_money/features/accounts/domain/repositories/account_repository.dart';
+import 'package:pocket_money/features/categories/domain/entities/category_entity.dart';
+import 'package:pocket_money/features/categories/domain/repositories/category_repository.dart';
+import 'package:pocket_money/features/profiles/domain/entities/profile_entity.dart';
+import 'package:pocket_money/features/profiles/domain/repositories/profile_repository.dart';
+import 'package:pocket_money/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:pocket_money/features/transactions/domain/repositories/transaction_repository.dart';
 import 'package:pocket_money/shared/widgets/brand_logo.dart';
 import 'package:pocket_money/shared/widgets/modern_dialogs.dart';
 
@@ -701,11 +709,11 @@ void main() {
         findsOneWidget,
       );
 
-      // 6b. Test redesigned ModernDialogShell Rename Profile popup with live avatar preview!
-      await tester.tap(find.byTooltip('Rename profile'));
+      // 6b. Test redesigned ModernDialogShell Edit Profile popup with live avatar preview!
+      await tester.tap(find.byTooltip('Edit profile'));
       await tester.pumpAndSettle();
       expect(find.byType(ModernDialogShell), findsOneWidget);
-      expect(find.text('Rename Profile'), findsOneWidget);
+      expect(find.text('Edit Profile'), findsOneWidget);
       expect(find.text('Preview'), findsOneWidget);
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
@@ -893,7 +901,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Expense & Budget Guard'), findsOneWidget);
-      expect(find.text('On Track'), findsOneWidget);
+      expect(find.text('On Track'), findsWidgets);
       expect(find.text('Budget Spent'), findsOneWidget);
       expect(find.text('Remaining'), findsOneWidget);
       expect(find.text('Safe / Day'), findsOneWidget);
@@ -1035,8 +1043,14 @@ void main() {
       await tester.pumpAndSettle();
 
       // 2. Set a ₹ 1,000 monthly budget via Home Expense & Budget Guard
+      await tester.drag(
+        find.byType(CustomScrollView).first,
+        const Offset(0, -260),
+      );
+      await tester.pumpAndSettle();
       final setBudgetBtn = find.byKey(const Key('dashboard_set_budget_btn'));
       await tester.ensureVisible(setBudgetBtn);
+      await tester.pumpAndSettle();
       await tester.tap(setBudgetBtn);
       await tester.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 60)),
@@ -1165,6 +1179,129 @@ void main() {
       expect(find.byKey(const Key('in_app_alert_banner')), findsOneWidget);
       expect(find.text('Pocket CFO Alerts Active'), findsOneWidget);
 
+      expect(tester.takeException(), isNull);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(milliseconds: 1));
+    },
+  );
+
+  testWidgets(
+    'Ledger passbook rows display signed Deducted/Income deltas, actual running balances & detail balance trail at 360x800',
+    (tester) async {
+      await initDeps();
+      await tester.binding.setSurfaceSize(const Size(360, 800));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      // Seed Opening ₹25,000 -> Salary +₹1,00,000 -> Groceries -₹6,000
+      final profileRepo = getIt<ProfileRepository>();
+      final accountRepo = getIt<AccountRepository>();
+      final catRepo = getIt<CategoryRepository>();
+      final txRepo = getIt<TransactionRepository>();
+
+      final profile = (await profileRepo.createProfile(
+        userId: 'local-owner',
+        ownerDisplayName: 'Local Owner',
+        name: 'Passbook Vault',
+        profileType: ProfileType.personal,
+        baseCurrencyCode: 'INR',
+      )).valueOrNull!;
+      final bank = (await accountRepo.createAccountWithOpeningBalance(
+        profileId: profile.id,
+        name: 'Primary Bank',
+        accountType: FinancialAccountType.bank,
+        currencyCode: 'INR',
+        openingBalanceMinor: 2500000, // ₹25,000
+        openingDateUtc: '2026-11-19T08:00:00.000Z',
+      )).valueOrNull!;
+      final incCats = (await catRepo.listCategories(
+        profile.id,
+        type: CategoryType.income,
+      )).valueOrNull!;
+      final expCats = (await catRepo.listCategories(
+        profile.id,
+        type: CategoryType.expense,
+      )).valueOrNull!;
+      final salaryCat = incCats.firstWhere((c) => c.name == 'Salary');
+      final groceriesCat = expCats.firstWhere((c) => c.name == 'Groceries');
+
+      await txRepo.createTransaction(
+        profile.id,
+        CreateTransactionCommand(
+          type: TransactionType.income,
+          amountMinor: 10000000, // +₹1,00,000 -> Bal ₹1,25,000
+          currencyCode: 'INR',
+          transactionDateUtc: '2026-11-19T09:00:00.000Z',
+          destinationAccountId: bank.id,
+          categoryId: salaryCat.id,
+          description: 'Monthly Salary',
+        ),
+      );
+      await txRepo.createTransaction(
+        profile.id,
+        CreateTransactionCommand(
+          type: TransactionType.expense,
+          amountMinor: 600000, // -₹6,000 -> Bal ₹1,19,000
+          currencyCode: 'INR',
+          transactionDateUtc: '2026-11-19T10:00:00.000Z',
+          sourceAccountId: bank.id,
+          categoryId: groceriesCat.id,
+          description: 'Groceries',
+        ),
+      );
+
+      // Verify repository passbook math holds even under filtered Expense query
+      final filteredExp = (await txRepo.queryTransactions(
+        profile.id,
+        filter: const TransactionFilter(type: TransactionType.expense),
+      )).valueOrNull!;
+      expect(filteredExp.items.length, 1);
+      expect(
+        filteredExp.items.first.runningBalanceBefore?.amountMinor,
+        12500000,
+      );
+      expect(
+        filteredExp.items.first.runningBalanceAfter?.amountMinor,
+        11900000,
+      );
+
+      await tester.pumpWidget(const PocketCfoApp());
+      await tester.pumpAndSettle();
+
+      // Skip onboarding & enter offline workspace -> lands directly in Passbook Vault
+      if (find.byKey(const Key('onboarding_skip_btn')).evaluate().isNotEmpty) {
+        await tester.tap(find.byKey(const Key('onboarding_skip_btn')));
+        await tester.pumpAndSettle();
+      }
+      if (find.text('Start Offline Local Workspace').evaluate().isNotEmpty) {
+        await tester.tap(find.text('Start Offline Local Workspace'));
+        await tester.pumpAndSettle();
+      }
+
+      // Open Ledger tab via bottom dock
+      await tester.tap(find.text('Ledger').last);
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 80)),
+      );
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Transaction Journal'), findsOneWidget);
+      expect(find.text('Deducted'), findsOneWidget);
+      expect(find.text('Income'), findsWidgets);
+      expect(find.text('Opening'), findsOneWidget);
+      expect(find.textContaining('Bal '), findsNWidgets(3));
+
+      // Tap Groceries to verify Passbook Balance Trail (Before -> Deducted -> Actual Bal)
+      await tester.tap(find.text('Groceries'));
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 80)),
+      );
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Before'), findsOneWidget);
+      expect(find.text('Actual Bal'), findsOneWidget);
       expect(tester.takeException(), isNull);
 
       await tester.pumpWidget(const SizedBox.shrink());

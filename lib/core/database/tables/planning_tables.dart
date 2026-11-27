@@ -216,3 +216,38 @@ class LoanInstallments extends Table {
     'FOREIGN KEY(payment_transaction_id, profile_id) REFERENCES transactions(id, profile_id)',
   ];
 }
+
+class BucketListItems extends Table {
+  TextColumn get id => text()();
+  TextColumn get profileId => text().references(Profiles, #id)();
+  TextColumn get name => text().withLength(min: 1, max: 80)();
+  IntColumn get estimatedAmountMinor =>
+      integer().check(estimatedAmountMinor.isBiggerThanValue(0))();
+  IntColumn get savedAmountMinor => integer().withDefault(const Constant(0))();
+  IntColumn get reservedInBudgetMinor =>
+      integer().withDefault(const Constant(0))();
+  IntColumn get actualAmountMinor => integer().nullable()();
+  TextColumn get currencyCode => text().references(Currencies, #code)();
+  TextColumn get priority => text().check(
+    priority.isIn(const ['urgent', 'essential', 'nice', 'dream']),
+  )();
+  TextColumn get targetYearMonth => text()();
+  TextColumn get dueDateUtc => text().nullable()();
+  TextColumn get reminderAtUtc => text().nullable()();
+  TextColumn get categoryId => text().nullable()();
+  TextColumn get linkedGoalId => text().nullable()();
+  TextColumn get purchasedTransactionId => text().nullable()();
+  TextColumn get note => text().nullable()();
+  IntColumn get postponeCount => integer().withDefault(const Constant(0))();
+  TextColumn get status =>
+      text().check(status.isIn(const ['planned', 'purchased', 'cancelled']))();
+  TextColumn get createdAtUtc => text()();
+  TextColumn get updatedAtUtc => text()();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+
+  @override
+  List<String> get customConstraints => const ['UNIQUE(id, profile_id)'];
+}

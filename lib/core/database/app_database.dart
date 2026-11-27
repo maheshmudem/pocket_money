@@ -34,6 +34,7 @@ part 'app_database.g.dart';
     RecurringRules,
     Loans,
     LoanInstallments,
+    BucketListItems,
     // Import, Sync, Audit & Notifications
     ImportBatches,
     ImportedTransactions,
@@ -48,7 +49,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -58,7 +59,9 @@ class AppDatabase extends _$AppDatabase {
       await seedDefaultCurrencies();
     },
     onUpgrade: (Migrator m, int from, int to) async {
-      // Versioned incremental upgrades go here without ever mutating released versions.
+      if (from < 2) {
+        await m.createTable(bucketListItems);
+      }
       await _installIntegrityObjects();
     },
     beforeOpen: (OpeningDetails details) async {

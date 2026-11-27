@@ -144,6 +144,7 @@ final class DriftSavingsGoalRepository implements SavingsGoalRepository {
     required int amountMinor,
     String? sourceAccountId,
     String? note,
+    bool allowDirectDeposit = false,
   }) async {
     if (amountMinor <= 0) {
       return const FailureResult(
@@ -170,22 +171,26 @@ final class DriftSavingsGoalRepository implements SavingsGoalRepository {
           ),
         );
       }
-      final txRes = await _txRepo.createTransaction(
-        profileId,
-        CreateTransactionCommand(
-          type: TransactionType.transfer,
-          amountMinor: amountMinor,
-          currencyCode: goal.currencyCode,
-          transactionDateUtc: now,
-          sourceAccountId: sourceAccountId,
-          destinationAccountId: goal.linkedAccountId,
-          description: note?.trim().isNotEmpty == true
-              ? 'Goal (${goal.name}): ${note!.trim()}'
-              : 'Savings goal contribution: ${goal.name}',
-        ),
-      );
-      if (txRes.isFailure) return FailureResult(txRes.failureOrNull!);
-      linkedTxId = txRes.valueOrNull!.id;
+      final isDirectSameAccountDeposit =
+          allowDirectDeposit && sourceAccountId == goal.linkedAccountId;
+      if (!isDirectSameAccountDeposit) {
+        final txRes = await _txRepo.createTransaction(
+          profileId,
+          CreateTransactionCommand(
+            type: TransactionType.transfer,
+            amountMinor: amountMinor,
+            currencyCode: goal.currencyCode,
+            transactionDateUtc: now,
+            sourceAccountId: sourceAccountId,
+            destinationAccountId: goal.linkedAccountId,
+            description: note?.trim().isNotEmpty == true
+                ? 'Goal (${goal.name}): ${note!.trim()}'
+                : 'Savings goal contribution: ${goal.name}',
+          ),
+        );
+        if (txRes.isFailure) return FailureResult(txRes.failureOrNull!);
+        linkedTxId = txRes.valueOrNull!.id;
+      }
     }
 
     try {

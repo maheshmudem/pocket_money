@@ -125,35 +125,33 @@ Future<T?> showEnterpriseModal<T>({
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                height: 3,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [cfo.heroGradientEnd, cfo.accentCyan],
-                  ),
-                ),
-              ),
-              Flexible(child: builder(dialogCtx)),
-            ],
+            children: [Flexible(child: builder(dialogCtx))],
           ),
         ),
       ),
       transitionBuilder: (ctx, animation, _, child) {
         if (disableAnim) return child;
-        final curved = CurvedAnimation(
+        final fade = CurvedAnimation(
           parent: animation,
-          curve: Curves.easeOutBack,
-          reverseCurve: Curves.easeInCubic,
+          curve: AppMotion.curveEmphasized,
+          reverseCurve: AppMotion.curveExit,
+        );
+        final curvedScale = CurvedAnimation(
+          parent: animation,
+          curve: AppMotion.curveSpring,
+          reverseCurve: AppMotion.curveExit,
         );
         return FadeTransition(
-          opacity: CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeOutCubic,
-          ),
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.94, end: 1.0).animate(curved),
-            child: child,
+          opacity: fade,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 0.025),
+              end: Offset.zero,
+            ).animate(fade),
+            child: ScaleTransition(
+              scale: Tween<double>(begin: 0.96, end: 1.0).animate(curvedScale),
+              child: child,
+            ),
           ),
         );
       },
@@ -165,6 +163,12 @@ Future<T?> showEnterpriseModal<T>({
     isScrollControlled: true,
     useSafeArea: true,
     showDragHandle: true,
+    sheetAnimationStyle: AnimationStyle(
+      duration: AppMotion.resolve(context, AppMotion.page),
+      reverseDuration: AppMotion.resolve(context, AppMotion.pageReverse),
+      curve: AppMotion.curveEmphasized,
+      reverseCurve: AppMotion.curveExit,
+    ),
     builder: builder,
   );
 }

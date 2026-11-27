@@ -223,6 +223,228 @@ final class DriftBudgetRepository implements BudgetRepository {
   }
 
   @override
+  Future<Result<BudgetEntity>> updateBudget({
+    required ProfileId profileId,
+    required String budgetId,
+    required String name,
+    required BudgetPeriodType periodType,
+    required int overallLimitMinor,
+    required Map<String, int> categoryLimitsMinor,
+    required bool rolloverEnabled,
+    String? startDateUtc,
+    String? endDateUtc,
+  }) async {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty || overallLimitMinor <= 0) {
+      return const FailureResult(
+        ValidationFailure(
+          message: 'Budget requires a name and a positive overall limit.',
+        ),
+      );
+    }
+
+    final existing =
+        await (_db.select(_db.budgets)..where(
+              (b) =>
+                  b.id.equals(budgetId) & b.profileId.equals(profileId.value),
+            ))
+            .getSingleOrNull();
+    if (existing == null) {
+      return const FailureResult(NotFoundFailure());
+    }
+
+    final now = _clock.nowIsoUtc();
+    try {
+      await _db.transaction(() async {
+        await (_db.update(_db.budgets)..where(
+              (b) =>
+                  b.id.equals(budgetId) & b.profileId.equals(profileId.value),
+            ))
+            .write(
+              BudgetsCompanion(
+                name: Value(trimmed),
+                periodType: Value(periodType.wireValue),
+                overallLimitMinor: Value(overallLimitMinor),
+                rolloverEnabled: Value(rolloverEnabled),
+                startDateUtc: startDateUtc != null
+                    ? Value(startDateUtc)
+                    : const Value.absent(),
+                endDateUtc: endDateUtc != null
+                    ? Value(endDateUtc)
+                    : const Value.absent(),
+                updatedAtUtc: Value(now),
+                version: Value(existing.version + 1),
+              ),
+            );
+
+        await (_db.delete(_db.budgetCategories)..where(
+              (bc) =>
+                  bc.budgetId.equals(budgetId) &
+                  bc.profileId.equals(profileId.value),
+            ))
+            .go();
+
+        for (final entry in categoryLimitsMinor.entries) {
+          if (entry.value <= 0) continue;
+          await _db
+              .into(_db.budgetCategories)
+              .insert(
+                BudgetCategoriesCompanion.insert(
+                  id: _idGen.nextUuid(),
+                  profileId: profileId.value,
+                  budgetId: budgetId,
+                  categoryId: entry.key,
+                  limitMinor: entry.value,
+                ),
+              );
+        }
+      });
+
+      final all = await listBudgetsWithProgress(profileId);
+      if (all.isFailure) return FailureResult(all.failureOrNull!);
+      return Success(all.valueOrNull!.firstWhere((b) => b.id == budgetId));
+    } catch (_) {
+      return const FailureResult(DatabaseFailure());
+    }
+  }
+
+  @override
+  Future<Result<void>> reallocateCategoryLimit({
+    required ProfileId profileId,
+    required String fromBudgetId,
+    required String fromCategoryId,
+    required String toBudgetId,
+    required String toCategoryId,
+    required int amountMinor,
+  }) async {
+    if (amountMinor <= 0) {
+      return const FailureResult(
+        ValidationFailure(message: 'Transfer amount must be positive.'),
+      );
+    }
+    if (fromBudgetId == toBudgetId && fromCategoryId == toCategoryId) {
+      return const FailureResult(
+        ValidationFailure(
+          message: 'Source and target category envelopes must be different.',
+        ),
+      );
+    }
+
+    final now = _clock.nowIsoUtc();
+    try {
+      final failure = await _db.transaction<AppFailure?>(() async {
+        final fromCat =
+            await (_db.select(_db.budgetCategories)..where(
+                  (bc) =>
+                      bc.budgetId.equals(fromBudgetId) &
+                      bc.categoryId.equals(fromCategoryId) &
+                      bc.profileId.equals(profileId.value),
+                ))
+                .getSingleOrNull();
+        final toCat =
+            await (_db.select(_db.budgetCategories)..where(
+                  (bc) =>
+                      bc.budgetId.equals(toBudgetId) &
+                      bc.categoryId.equals(toCategoryId) &
+                      bc.profileId.equals(profileId.value),
+                ))
+                .getSingleOrNull();
+
+        if (fromCat == null || toCat == null) {
+          return const NotFoundFailure(
+            message: 'Category budget envelope not found.',
+          );
+        }
+        if (fromCat.limitMinor - amountMinor <= 0) {
+          return const ValidationFailure(
+            message:
+                'Transfer must leave a positive remaining limit in the source envelope.',
+          );
+        }
+
+        final fromBudget =
+            await (_db.select(_db.budgets)..where(
+                  (b) =>
+                      b.id.equals(fromBudgetId) &
+                      b.profileId.equals(profileId.value),
+                ))
+                .getSingleOrNull();
+        final toBudget =
+            await (_db.select(_db.budgets)..where(
+                  (b) =>
+                      b.id.equals(toBudgetId) &
+                      b.profileId.equals(profileId.value),
+                ))
+                .getSingleOrNull();
+        if (fromBudget == null || toBudget == null) {
+          return const NotFoundFailure();
+        }
+        if (fromBudgetId != toBudgetId &&
+            fromBudget.overallLimitMinor - amountMinor <= 0) {
+          return const ValidationFailure(
+            message: 'Transfer exceeds the available cap of the source budget.',
+          );
+        }
+
+        await (_db.update(
+          _db.budgetCategories,
+        )..where((bc) => bc.id.equals(fromCat.id))).write(
+          BudgetCategoriesCompanion(
+            limitMinor: Value(fromCat.limitMinor - amountMinor),
+          ),
+        );
+        await (_db.update(
+          _db.budgetCategories,
+        )..where((bc) => bc.id.equals(toCat.id))).write(
+          BudgetCategoriesCompanion(
+            limitMinor: Value(toCat.limitMinor + amountMinor),
+          ),
+        );
+
+        if (fromBudgetId == toBudgetId) {
+          await (_db.update(
+            _db.budgets,
+          )..where((b) => b.id.equals(fromBudgetId))).write(
+            BudgetsCompanion(
+              updatedAtUtc: Value(now),
+              version: Value(fromBudget.version + 1),
+            ),
+          );
+        } else {
+          await (_db.update(
+            _db.budgets,
+          )..where((b) => b.id.equals(fromBudgetId))).write(
+            BudgetsCompanion(
+              overallLimitMinor: Value(
+                fromBudget.overallLimitMinor - amountMinor,
+              ),
+              updatedAtUtc: Value(now),
+              version: Value(fromBudget.version + 1),
+            ),
+          );
+          await (_db.update(
+            _db.budgets,
+          )..where((b) => b.id.equals(toBudgetId))).write(
+            BudgetsCompanion(
+              overallLimitMinor: Value(
+                toBudget.overallLimitMinor + amountMinor,
+              ),
+              updatedAtUtc: Value(now),
+              version: Value(toBudget.version + 1),
+            ),
+          );
+        }
+        return null;
+      });
+
+      if (failure != null) return FailureResult(failure);
+      return const Success(null);
+    } catch (_) {
+      return const FailureResult(DatabaseFailure());
+    }
+  }
+
+  @override
   Future<Result<void>> deleteBudget(
     ProfileId profileId,
     String budgetId,
