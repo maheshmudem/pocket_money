@@ -7,6 +7,7 @@ import 'package:get_it/get_it.dart';
 
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/financial_engine/money.dart';
+import '../../../../shared/widgets/classic_motion.dart';
 import '../../../../shared/widgets/enterprise_layout.dart';
 import '../../../../shared/widgets/fintech_widgets.dart';
 import '../../../../shared/widgets/modern_dialogs.dart';
@@ -217,182 +218,225 @@ class _CsvImportPageState extends State<CsvImportPage> {
               .firstOrNull
               ?.id;
 
-          if (_summary != null) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.xl),
-                child: PressScaleCard(
-                  padding: const EdgeInsets.all(AppSpacing.xl),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconSquircle(
-                        icon: Icons.check_circle_rounded,
-                        iconColor: cfo.success,
-                        backgroundColor: cfo.successContainer,
-                        size: 64,
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      Text(
-                        'Import Completed',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      Text('Total rows: ${_summary!.totalRows}'),
-                      Text(
-                        'Imported into ledger: ${_summary!.importedCount}',
-                        style: TextStyle(
-                          color: cfo.success,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      Text(
-                        'Skipped (duplicates/manual): ${_summary!.skippedCount}',
-                      ),
-                      Text(
-                        'Rejected (validation errors): ${_summary!.rejectedCount}',
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      FilledButton(
-                        onPressed: () => setState(() {
-                          _summary = null;
-                          _rawRows = const [];
-                          _stagedRows = const [];
-                          _fileName = null;
-                        }),
-                        child: const Text('Import Another File'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }
-
-          return SingleChildScrollView(
-            padding: EnterprisePageContainer.responsivePadding(context),
-            child: EnterprisePageContainer(
-              maxWidth: AppBreakpoints.maxReadingWidth,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _StepperHeader(activeStep: _activeStep),
-                  const SizedBox(height: AppSpacing.md),
-                  if (_error != null) ...[
-                    PressScaleCard(
-                      backgroundColor: cfo.expenseContainer,
-                      borderColor: cfo.expense.withValues(alpha: 0.35),
-                      padding: const EdgeInsets.all(AppSpacing.sm),
-                      child: Text(
-                        _error!,
-                        style: TextStyle(color: cfo.expense),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                  ],
-                  PressScaleCard(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          '1. Select CSV Statement',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        Text(
-                          'Max 10 MB / 25,000 rows. Every row is previewed and checked for duplicates before committing.',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: cfo.subtleText),
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        if (accounts.isNotEmpty)
-                          FintechDropdownField<String>(
-                            label: 'Target Financial Account',
-                            value: _accountId,
-                            leadingIcon: Icons.account_balance_rounded,
-                            options: accounts
-                                .map(
-                                  (a) => FintechDropdownOption<String>(
-                                    value: a.id,
-                                    label: a.name,
-                                    selectedLabel:
-                                        '${a.name} (${a.currencyCode})',
-                                    subtitle: a.accountType.label,
-                                    badge: a.currencyCode,
-                                    icon: Icons.account_balance_wallet_outlined,
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (v) => setState(() => _accountId = v),
-                          ),
-                        const SizedBox(height: AppSpacing.sm),
-                        FilledButton.icon(
-                          onPressed: _pickFile,
-                          icon: const Icon(Icons.folder_open_outlined),
-                          label: Text(
-                            _fileName == null
-                                ? 'Choose CSV File'
-                                : 'Selected: $_fileName (${_rawRows.length} rows)',
+          return ClassicContentSwitcher(
+            stateKey: _summary != null ? 'summary' : 'wizard',
+            child: _summary != null
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.xl),
+                      child: StaggeredFadeSlide(
+                        index: 0,
+                        child: PressScaleCard(
+                          padding: const EdgeInsets.all(AppSpacing.xl),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconSquircle(
+                                icon: Icons.check_circle_rounded,
+                                iconColor: cfo.success,
+                                backgroundColor: cfo.successContainer,
+                                size: 64,
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              Text(
+                                'Import Completed',
+                                style: Theme.of(context).textTheme.titleLarge,
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              Text('Total rows: ${_summary!.totalRows}'),
+                              Text(
+                                'Imported into ledger: ${_summary!.importedCount}',
+                                style: TextStyle(
+                                  color: cfo.success,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              Text(
+                                'Skipped (duplicates/manual): ${_summary!.skippedCount}',
+                              ),
+                              Text(
+                                'Rejected (validation errors): ${_summary!.rejectedCount}',
+                              ),
+                              const SizedBox(height: AppSpacing.lg),
+                              FilledButton(
+                                onPressed: () => setState(() {
+                                  _summary = null;
+                                  _rawRows = const [];
+                                  _stagedRows = const [];
+                                  _fileName = null;
+                                }),
+                                child: const Text('Import Another File'),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                  if (_rawRows.isNotEmpty) ...[
-                    const SizedBox(height: AppSpacing.md),
-                    PressScaleCard(
-                      padding: const EdgeInsets.all(AppSpacing.md),
+                  )
+                : SingleChildScrollView(
+                    padding: EnterprisePageContainer.responsivePadding(context),
+                    child: EnterprisePageContainer(
+                      maxWidth: AppBreakpoints.maxReadingWidth,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Text(
-                            '2. Map Columns',
-                            style: Theme.of(context).textTheme.titleMedium,
+                          StaggeredFadeSlide(
+                            index: 0,
+                            child: _StepperHeader(activeStep: _activeStep),
                           ),
-                          const SizedBox(height: AppSpacing.sm),
-                          _colDropdown(
-                            'Date column',
-                            _dateCol,
-                            (v) => setState(() => _dateCol = v),
+                          const SizedBox(height: AppSpacing.md),
+                          ClassicExpandCollapse(
+                            expanded: _error != null,
+                            child: _error != null
+                                ? Padding(
+                                    padding: const EdgeInsets.only(
+                                      bottom: AppSpacing.sm,
+                                    ),
+                                    child: PressScaleCard(
+                                      backgroundColor: cfo.expenseContainer,
+                                      borderColor: cfo.expense.withValues(
+                                        alpha: 0.35,
+                                      ),
+                                      padding: const EdgeInsets.all(
+                                        AppSpacing.sm,
+                                      ),
+                                      child: Text(
+                                        _error!,
+                                        style: TextStyle(color: cfo.expense),
+                                      ),
+                                    ),
+                                  )
+                                : const SizedBox.shrink(),
                           ),
-                          const SizedBox(height: AppSpacing.xs),
-                          _colDropdown(
-                            'Description column',
-                            _descCol,
-                            (v) => setState(() => _descCol = v),
+                          StaggeredFadeSlide(
+                            index: 1,
+                            child: PressScaleCard(
+                              padding: const EdgeInsets.all(AppSpacing.md),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Text(
+                                    '1. Select CSV Statement',
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleMedium,
+                                  ),
+                                  const SizedBox(height: AppSpacing.xs),
+                                  Text(
+                                    'Max 10 MB / 25,000 rows. Every row is previewed and checked for duplicates before committing.',
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(color: cfo.subtleText),
+                                  ),
+                                  const SizedBox(height: AppSpacing.sm),
+                                  if (accounts.isNotEmpty)
+                                    FintechDropdownField<String>(
+                                      label: 'Target Financial Account',
+                                      value: _accountId,
+                                      leadingIcon:
+                                          Icons.account_balance_rounded,
+                                      options: accounts
+                                          .map(
+                                            (
+                                              a,
+                                            ) => FintechDropdownOption<String>(
+                                              value: a.id,
+                                              label: a.name,
+                                              selectedLabel:
+                                                  '${a.name} (${a.currencyCode})',
+                                              subtitle: a.accountType.label,
+                                              badge: a.currencyCode,
+                                              icon: Icons
+                                                  .account_balance_wallet_outlined,
+                                            ),
+                                          )
+                                          .toList(),
+                                      onChanged: (v) =>
+                                          setState(() => _accountId = v),
+                                    ),
+                                  const SizedBox(height: AppSpacing.sm),
+                                  FilledButton.icon(
+                                    onPressed: _pickFile,
+                                    icon: const Icon(
+                                      Icons.folder_open_outlined,
+                                    ),
+                                    label: Text(
+                                      _fileName == null
+                                          ? 'Choose CSV File'
+                                          : 'Selected: $_fileName (${_rawRows.length} rows)',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                          const SizedBox(height: AppSpacing.xs),
-                          _colDropdown(
-                            'Signed Amount column (- expense / + income)',
-                            _amountCol,
-                            (v) => setState(() => _amountCol = v),
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          FintechSwitchCard(
-                            icon: Icons.table_rows_outlined,
-                            title: 'First row contains column headers',
-                            value: _hasHeader,
-                            onChanged: (v) => setState(() => _hasHeader = v),
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          FilledButton(
-                            onPressed: _isBusy
-                                ? null
-                                : () => _runPreview(profile),
-                            child: const Text('Preview & Detect Duplicates'),
-                          ),
+                          if (_rawRows.isNotEmpty) ...[
+                            const SizedBox(height: AppSpacing.md),
+                            StaggeredFadeSlide(
+                              index: 0,
+                              child: PressScaleCard(
+                                padding: const EdgeInsets.all(AppSpacing.md),
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Text(
+                                      '2. Map Columns',
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.titleMedium,
+                                    ),
+                                    const SizedBox(height: AppSpacing.sm),
+                                    _colDropdown(
+                                      'Date column',
+                                      _dateCol,
+                                      (v) => setState(() => _dateCol = v),
+                                    ),
+                                    const SizedBox(height: AppSpacing.xs),
+                                    _colDropdown(
+                                      'Description column',
+                                      _descCol,
+                                      (v) => setState(() => _descCol = v),
+                                    ),
+                                    const SizedBox(height: AppSpacing.xs),
+                                    _colDropdown(
+                                      'Signed Amount column (- expense / + income)',
+                                      _amountCol,
+                                      (v) => setState(() => _amountCol = v),
+                                    ),
+                                    const SizedBox(height: AppSpacing.sm),
+                                    FintechSwitchCard(
+                                      icon: Icons.table_rows_outlined,
+                                      title:
+                                          'First row contains column headers',
+                                      value: _hasHeader,
+                                      onChanged: (v) =>
+                                          setState(() => _hasHeader = v),
+                                    ),
+                                    const SizedBox(height: AppSpacing.sm),
+                                    FilledButton(
+                                      onPressed: _isBusy
+                                          ? null
+                                          : () => _runPreview(profile),
+                                      child: const Text(
+                                        'Preview & Detect Duplicates',
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                          if (_stagedRows.isNotEmpty) ...[
+                            const SizedBox(height: AppSpacing.md),
+                            StaggeredFadeSlide(
+                              index: 0,
+                              child: _buildPreviewSummaryCard(context, profile),
+                            ),
+                          ],
                         ],
                       ),
                     ),
-                  ],
-                  if (_stagedRows.isNotEmpty) ...[
-                    const SizedBox(height: AppSpacing.md),
-                    _buildPreviewSummaryCard(context, profile),
-                  ],
-                ],
-              ),
-            ),
+                  ),
           );
         },
       ),
@@ -562,7 +606,9 @@ class _StepperHeader extends StatelessWidget {
       children: [
         for (var i = 0; i < steps.length; i++) ...[
           Expanded(
-            child: Container(
+            child: AnimatedContainer(
+              duration: AppMotion.resolve(context, AppMotion.standard),
+              curve: AppMotion.curveStandard,
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
               decoration: BoxDecoration(
                 color: (i + 1) <= activeStep

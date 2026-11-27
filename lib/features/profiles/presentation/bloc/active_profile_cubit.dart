@@ -221,6 +221,53 @@ class ActiveProfileCubit extends Cubit<ActiveProfileState> {
     return res;
   }
 
+  Future<Result<FinancialProfile>> updateProfile({
+    required ProfileId profileId,
+    required String name,
+    required ProfileType profileType,
+    String? baseCurrencyCode,
+    String? timezone,
+    bool? editorsCanPost,
+    bool queueSync = false,
+  }) async {
+    final res = await _repo.updateProfile(
+      profileId: profileId,
+      userId: _currentUserId,
+      name: name,
+      profileType: profileType,
+      baseCurrencyCode: baseCurrencyCode,
+      timezone: timezone,
+      editorsCanPost: editorsCanPost,
+      queueSync: queueSync,
+    );
+    if (res.isSuccess) {
+      await loadProfiles(userId: _currentUserId);
+    }
+    return res;
+  }
+
+  Future<Result<void>> archiveProfile(
+    ProfileId profileId, {
+    bool queueSync = false,
+  }) async {
+    if (state.profiles.length <= 1) {
+      return const FailureResult(
+        ValidationFailure(
+          message: 'Keep at least one active financial profile.',
+        ),
+      );
+    }
+    final res = await _repo.archiveProfile(
+      profileId: profileId,
+      userId: _currentUserId,
+      queueSync: queueSync,
+    );
+    if (res.isSuccess) {
+      await loadProfiles(userId: _currentUserId);
+    }
+    return res;
+  }
+
   Future<Result<FinancialProfile>> changeActiveBaseCurrency(
     String newCurrencyCode, {
     String? note,

@@ -14676,6 +14676,1236 @@ class LoanInstallmentsCompanion extends UpdateCompanion<LoanInstallment> {
   }
 }
 
+class $BucketListItemsTable extends BucketListItems
+    with TableInfo<$BucketListItemsTable, BucketListItem> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $BucketListItemsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _profileIdMeta = const VerificationMeta(
+    'profileId',
+  );
+  @override
+  late final GeneratedColumn<String> profileId = GeneratedColumn<String>(
+    'profile_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES profiles (id)',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 80,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _estimatedAmountMinorMeta =
+      const VerificationMeta('estimatedAmountMinor');
+  @override
+  late final GeneratedColumn<int> estimatedAmountMinor = GeneratedColumn<int>(
+    'estimated_amount_minor',
+    aliasedName,
+    false,
+    check: () => ComparableExpr(estimatedAmountMinor).isBiggerThanValue(0),
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _savedAmountMinorMeta = const VerificationMeta(
+    'savedAmountMinor',
+  );
+  @override
+  late final GeneratedColumn<int> savedAmountMinor = GeneratedColumn<int>(
+    'saved_amount_minor',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _reservedInBudgetMinorMeta =
+      const VerificationMeta('reservedInBudgetMinor');
+  @override
+  late final GeneratedColumn<int> reservedInBudgetMinor = GeneratedColumn<int>(
+    'reserved_in_budget_minor',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _actualAmountMinorMeta = const VerificationMeta(
+    'actualAmountMinor',
+  );
+  @override
+  late final GeneratedColumn<int> actualAmountMinor = GeneratedColumn<int>(
+    'actual_amount_minor',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _currencyCodeMeta = const VerificationMeta(
+    'currencyCode',
+  );
+  @override
+  late final GeneratedColumn<String> currencyCode = GeneratedColumn<String>(
+    'currency_code',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES currencies (code)',
+    ),
+  );
+  static const VerificationMeta _priorityMeta = const VerificationMeta(
+    'priority',
+  );
+  @override
+  late final GeneratedColumn<String> priority = GeneratedColumn<String>(
+    'priority',
+    aliasedName,
+    false,
+    check: () => priority.isIn(const ['urgent', 'essential', 'nice', 'dream']),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _targetYearMonthMeta = const VerificationMeta(
+    'targetYearMonth',
+  );
+  @override
+  late final GeneratedColumn<String> targetYearMonth = GeneratedColumn<String>(
+    'target_year_month',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dueDateUtcMeta = const VerificationMeta(
+    'dueDateUtc',
+  );
+  @override
+  late final GeneratedColumn<String> dueDateUtc = GeneratedColumn<String>(
+    'due_date_utc',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _reminderAtUtcMeta = const VerificationMeta(
+    'reminderAtUtc',
+  );
+  @override
+  late final GeneratedColumn<String> reminderAtUtc = GeneratedColumn<String>(
+    'reminder_at_utc',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _categoryIdMeta = const VerificationMeta(
+    'categoryId',
+  );
+  @override
+  late final GeneratedColumn<String> categoryId = GeneratedColumn<String>(
+    'category_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _linkedGoalIdMeta = const VerificationMeta(
+    'linkedGoalId',
+  );
+  @override
+  late final GeneratedColumn<String> linkedGoalId = GeneratedColumn<String>(
+    'linked_goal_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _purchasedTransactionIdMeta =
+      const VerificationMeta('purchasedTransactionId');
+  @override
+  late final GeneratedColumn<String> purchasedTransactionId =
+      GeneratedColumn<String>(
+        'purchased_transaction_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _postponeCountMeta = const VerificationMeta(
+    'postponeCount',
+  );
+  @override
+  late final GeneratedColumn<int> postponeCount = GeneratedColumn<int>(
+    'postpone_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    check: () => status.isIn(const ['planned', 'purchased', 'cancelled']),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtUtcMeta = const VerificationMeta(
+    'createdAtUtc',
+  );
+  @override
+  late final GeneratedColumn<String> createdAtUtc = GeneratedColumn<String>(
+    'created_at_utc',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtUtcMeta = const VerificationMeta(
+    'updatedAtUtc',
+  );
+  @override
+  late final GeneratedColumn<String> updatedAtUtc = GeneratedColumn<String>(
+    'updated_at_utc',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    profileId,
+    name,
+    estimatedAmountMinor,
+    savedAmountMinor,
+    reservedInBudgetMinor,
+    actualAmountMinor,
+    currencyCode,
+    priority,
+    targetYearMonth,
+    dueDateUtc,
+    reminderAtUtc,
+    categoryId,
+    linkedGoalId,
+    purchasedTransactionId,
+    note,
+    postponeCount,
+    status,
+    createdAtUtc,
+    updatedAtUtc,
+    version,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'bucket_list_items';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<BucketListItem> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('profile_id')) {
+      context.handle(
+        _profileIdMeta,
+        profileId.isAcceptableOrUnknown(data['profile_id']!, _profileIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_profileIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('estimated_amount_minor')) {
+      context.handle(
+        _estimatedAmountMinorMeta,
+        estimatedAmountMinor.isAcceptableOrUnknown(
+          data['estimated_amount_minor']!,
+          _estimatedAmountMinorMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_estimatedAmountMinorMeta);
+    }
+    if (data.containsKey('saved_amount_minor')) {
+      context.handle(
+        _savedAmountMinorMeta,
+        savedAmountMinor.isAcceptableOrUnknown(
+          data['saved_amount_minor']!,
+          _savedAmountMinorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('reserved_in_budget_minor')) {
+      context.handle(
+        _reservedInBudgetMinorMeta,
+        reservedInBudgetMinor.isAcceptableOrUnknown(
+          data['reserved_in_budget_minor']!,
+          _reservedInBudgetMinorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('actual_amount_minor')) {
+      context.handle(
+        _actualAmountMinorMeta,
+        actualAmountMinor.isAcceptableOrUnknown(
+          data['actual_amount_minor']!,
+          _actualAmountMinorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('currency_code')) {
+      context.handle(
+        _currencyCodeMeta,
+        currencyCode.isAcceptableOrUnknown(
+          data['currency_code']!,
+          _currencyCodeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_currencyCodeMeta);
+    }
+    if (data.containsKey('priority')) {
+      context.handle(
+        _priorityMeta,
+        priority.isAcceptableOrUnknown(data['priority']!, _priorityMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_priorityMeta);
+    }
+    if (data.containsKey('target_year_month')) {
+      context.handle(
+        _targetYearMonthMeta,
+        targetYearMonth.isAcceptableOrUnknown(
+          data['target_year_month']!,
+          _targetYearMonthMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_targetYearMonthMeta);
+    }
+    if (data.containsKey('due_date_utc')) {
+      context.handle(
+        _dueDateUtcMeta,
+        dueDateUtc.isAcceptableOrUnknown(
+          data['due_date_utc']!,
+          _dueDateUtcMeta,
+        ),
+      );
+    }
+    if (data.containsKey('reminder_at_utc')) {
+      context.handle(
+        _reminderAtUtcMeta,
+        reminderAtUtc.isAcceptableOrUnknown(
+          data['reminder_at_utc']!,
+          _reminderAtUtcMeta,
+        ),
+      );
+    }
+    if (data.containsKey('category_id')) {
+      context.handle(
+        _categoryIdMeta,
+        categoryId.isAcceptableOrUnknown(data['category_id']!, _categoryIdMeta),
+      );
+    }
+    if (data.containsKey('linked_goal_id')) {
+      context.handle(
+        _linkedGoalIdMeta,
+        linkedGoalId.isAcceptableOrUnknown(
+          data['linked_goal_id']!,
+          _linkedGoalIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('purchased_transaction_id')) {
+      context.handle(
+        _purchasedTransactionIdMeta,
+        purchasedTransactionId.isAcceptableOrUnknown(
+          data['purchased_transaction_id']!,
+          _purchasedTransactionIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
+    if (data.containsKey('postpone_count')) {
+      context.handle(
+        _postponeCountMeta,
+        postponeCount.isAcceptableOrUnknown(
+          data['postpone_count']!,
+          _postponeCountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('created_at_utc')) {
+      context.handle(
+        _createdAtUtcMeta,
+        createdAtUtc.isAcceptableOrUnknown(
+          data['created_at_utc']!,
+          _createdAtUtcMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtUtcMeta);
+    }
+    if (data.containsKey('updated_at_utc')) {
+      context.handle(
+        _updatedAtUtcMeta,
+        updatedAtUtc.isAcceptableOrUnknown(
+          data['updated_at_utc']!,
+          _updatedAtUtcMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtUtcMeta);
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  BucketListItem map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return BucketListItem(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      profileId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}profile_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      estimatedAmountMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}estimated_amount_minor'],
+      )!,
+      savedAmountMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}saved_amount_minor'],
+      )!,
+      reservedInBudgetMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}reserved_in_budget_minor'],
+      )!,
+      actualAmountMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}actual_amount_minor'],
+      ),
+      currencyCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency_code'],
+      )!,
+      priority: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}priority'],
+      )!,
+      targetYearMonth: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}target_year_month'],
+      )!,
+      dueDateUtc: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}due_date_utc'],
+      ),
+      reminderAtUtc: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reminder_at_utc'],
+      ),
+      categoryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category_id'],
+      ),
+      linkedGoalId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}linked_goal_id'],
+      ),
+      purchasedTransactionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}purchased_transaction_id'],
+      ),
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
+      postponeCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}postpone_count'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      createdAtUtc: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at_utc'],
+      )!,
+      updatedAtUtc: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at_utc'],
+      )!,
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+    );
+  }
+
+  @override
+  $BucketListItemsTable createAlias(String alias) {
+    return $BucketListItemsTable(attachedDatabase, alias);
+  }
+}
+
+class BucketListItem extends DataClass implements Insertable<BucketListItem> {
+  final String id;
+  final String profileId;
+  final String name;
+  final int estimatedAmountMinor;
+  final int savedAmountMinor;
+  final int reservedInBudgetMinor;
+  final int? actualAmountMinor;
+  final String currencyCode;
+  final String priority;
+  final String targetYearMonth;
+  final String? dueDateUtc;
+  final String? reminderAtUtc;
+  final String? categoryId;
+  final String? linkedGoalId;
+  final String? purchasedTransactionId;
+  final String? note;
+  final int postponeCount;
+  final String status;
+  final String createdAtUtc;
+  final String updatedAtUtc;
+  final int version;
+  const BucketListItem({
+    required this.id,
+    required this.profileId,
+    required this.name,
+    required this.estimatedAmountMinor,
+    required this.savedAmountMinor,
+    required this.reservedInBudgetMinor,
+    this.actualAmountMinor,
+    required this.currencyCode,
+    required this.priority,
+    required this.targetYearMonth,
+    this.dueDateUtc,
+    this.reminderAtUtc,
+    this.categoryId,
+    this.linkedGoalId,
+    this.purchasedTransactionId,
+    this.note,
+    required this.postponeCount,
+    required this.status,
+    required this.createdAtUtc,
+    required this.updatedAtUtc,
+    required this.version,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['profile_id'] = Variable<String>(profileId);
+    map['name'] = Variable<String>(name);
+    map['estimated_amount_minor'] = Variable<int>(estimatedAmountMinor);
+    map['saved_amount_minor'] = Variable<int>(savedAmountMinor);
+    map['reserved_in_budget_minor'] = Variable<int>(reservedInBudgetMinor);
+    if (!nullToAbsent || actualAmountMinor != null) {
+      map['actual_amount_minor'] = Variable<int>(actualAmountMinor);
+    }
+    map['currency_code'] = Variable<String>(currencyCode);
+    map['priority'] = Variable<String>(priority);
+    map['target_year_month'] = Variable<String>(targetYearMonth);
+    if (!nullToAbsent || dueDateUtc != null) {
+      map['due_date_utc'] = Variable<String>(dueDateUtc);
+    }
+    if (!nullToAbsent || reminderAtUtc != null) {
+      map['reminder_at_utc'] = Variable<String>(reminderAtUtc);
+    }
+    if (!nullToAbsent || categoryId != null) {
+      map['category_id'] = Variable<String>(categoryId);
+    }
+    if (!nullToAbsent || linkedGoalId != null) {
+      map['linked_goal_id'] = Variable<String>(linkedGoalId);
+    }
+    if (!nullToAbsent || purchasedTransactionId != null) {
+      map['purchased_transaction_id'] = Variable<String>(
+        purchasedTransactionId,
+      );
+    }
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
+    map['postpone_count'] = Variable<int>(postponeCount);
+    map['status'] = Variable<String>(status);
+    map['created_at_utc'] = Variable<String>(createdAtUtc);
+    map['updated_at_utc'] = Variable<String>(updatedAtUtc);
+    map['version'] = Variable<int>(version);
+    return map;
+  }
+
+  BucketListItemsCompanion toCompanion(bool nullToAbsent) {
+    return BucketListItemsCompanion(
+      id: Value(id),
+      profileId: Value(profileId),
+      name: Value(name),
+      estimatedAmountMinor: Value(estimatedAmountMinor),
+      savedAmountMinor: Value(savedAmountMinor),
+      reservedInBudgetMinor: Value(reservedInBudgetMinor),
+      actualAmountMinor: actualAmountMinor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(actualAmountMinor),
+      currencyCode: Value(currencyCode),
+      priority: Value(priority),
+      targetYearMonth: Value(targetYearMonth),
+      dueDateUtc: dueDateUtc == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dueDateUtc),
+      reminderAtUtc: reminderAtUtc == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reminderAtUtc),
+      categoryId: categoryId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(categoryId),
+      linkedGoalId: linkedGoalId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(linkedGoalId),
+      purchasedTransactionId: purchasedTransactionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(purchasedTransactionId),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      postponeCount: Value(postponeCount),
+      status: Value(status),
+      createdAtUtc: Value(createdAtUtc),
+      updatedAtUtc: Value(updatedAtUtc),
+      version: Value(version),
+    );
+  }
+
+  factory BucketListItem.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return BucketListItem(
+      id: serializer.fromJson<String>(json['id']),
+      profileId: serializer.fromJson<String>(json['profileId']),
+      name: serializer.fromJson<String>(json['name']),
+      estimatedAmountMinor: serializer.fromJson<int>(
+        json['estimatedAmountMinor'],
+      ),
+      savedAmountMinor: serializer.fromJson<int>(json['savedAmountMinor']),
+      reservedInBudgetMinor: serializer.fromJson<int>(
+        json['reservedInBudgetMinor'],
+      ),
+      actualAmountMinor: serializer.fromJson<int?>(json['actualAmountMinor']),
+      currencyCode: serializer.fromJson<String>(json['currencyCode']),
+      priority: serializer.fromJson<String>(json['priority']),
+      targetYearMonth: serializer.fromJson<String>(json['targetYearMonth']),
+      dueDateUtc: serializer.fromJson<String?>(json['dueDateUtc']),
+      reminderAtUtc: serializer.fromJson<String?>(json['reminderAtUtc']),
+      categoryId: serializer.fromJson<String?>(json['categoryId']),
+      linkedGoalId: serializer.fromJson<String?>(json['linkedGoalId']),
+      purchasedTransactionId: serializer.fromJson<String?>(
+        json['purchasedTransactionId'],
+      ),
+      note: serializer.fromJson<String?>(json['note']),
+      postponeCount: serializer.fromJson<int>(json['postponeCount']),
+      status: serializer.fromJson<String>(json['status']),
+      createdAtUtc: serializer.fromJson<String>(json['createdAtUtc']),
+      updatedAtUtc: serializer.fromJson<String>(json['updatedAtUtc']),
+      version: serializer.fromJson<int>(json['version']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'profileId': serializer.toJson<String>(profileId),
+      'name': serializer.toJson<String>(name),
+      'estimatedAmountMinor': serializer.toJson<int>(estimatedAmountMinor),
+      'savedAmountMinor': serializer.toJson<int>(savedAmountMinor),
+      'reservedInBudgetMinor': serializer.toJson<int>(reservedInBudgetMinor),
+      'actualAmountMinor': serializer.toJson<int?>(actualAmountMinor),
+      'currencyCode': serializer.toJson<String>(currencyCode),
+      'priority': serializer.toJson<String>(priority),
+      'targetYearMonth': serializer.toJson<String>(targetYearMonth),
+      'dueDateUtc': serializer.toJson<String?>(dueDateUtc),
+      'reminderAtUtc': serializer.toJson<String?>(reminderAtUtc),
+      'categoryId': serializer.toJson<String?>(categoryId),
+      'linkedGoalId': serializer.toJson<String?>(linkedGoalId),
+      'purchasedTransactionId': serializer.toJson<String?>(
+        purchasedTransactionId,
+      ),
+      'note': serializer.toJson<String?>(note),
+      'postponeCount': serializer.toJson<int>(postponeCount),
+      'status': serializer.toJson<String>(status),
+      'createdAtUtc': serializer.toJson<String>(createdAtUtc),
+      'updatedAtUtc': serializer.toJson<String>(updatedAtUtc),
+      'version': serializer.toJson<int>(version),
+    };
+  }
+
+  BucketListItem copyWith({
+    String? id,
+    String? profileId,
+    String? name,
+    int? estimatedAmountMinor,
+    int? savedAmountMinor,
+    int? reservedInBudgetMinor,
+    Value<int?> actualAmountMinor = const Value.absent(),
+    String? currencyCode,
+    String? priority,
+    String? targetYearMonth,
+    Value<String?> dueDateUtc = const Value.absent(),
+    Value<String?> reminderAtUtc = const Value.absent(),
+    Value<String?> categoryId = const Value.absent(),
+    Value<String?> linkedGoalId = const Value.absent(),
+    Value<String?> purchasedTransactionId = const Value.absent(),
+    Value<String?> note = const Value.absent(),
+    int? postponeCount,
+    String? status,
+    String? createdAtUtc,
+    String? updatedAtUtc,
+    int? version,
+  }) => BucketListItem(
+    id: id ?? this.id,
+    profileId: profileId ?? this.profileId,
+    name: name ?? this.name,
+    estimatedAmountMinor: estimatedAmountMinor ?? this.estimatedAmountMinor,
+    savedAmountMinor: savedAmountMinor ?? this.savedAmountMinor,
+    reservedInBudgetMinor: reservedInBudgetMinor ?? this.reservedInBudgetMinor,
+    actualAmountMinor: actualAmountMinor.present
+        ? actualAmountMinor.value
+        : this.actualAmountMinor,
+    currencyCode: currencyCode ?? this.currencyCode,
+    priority: priority ?? this.priority,
+    targetYearMonth: targetYearMonth ?? this.targetYearMonth,
+    dueDateUtc: dueDateUtc.present ? dueDateUtc.value : this.dueDateUtc,
+    reminderAtUtc: reminderAtUtc.present
+        ? reminderAtUtc.value
+        : this.reminderAtUtc,
+    categoryId: categoryId.present ? categoryId.value : this.categoryId,
+    linkedGoalId: linkedGoalId.present ? linkedGoalId.value : this.linkedGoalId,
+    purchasedTransactionId: purchasedTransactionId.present
+        ? purchasedTransactionId.value
+        : this.purchasedTransactionId,
+    note: note.present ? note.value : this.note,
+    postponeCount: postponeCount ?? this.postponeCount,
+    status: status ?? this.status,
+    createdAtUtc: createdAtUtc ?? this.createdAtUtc,
+    updatedAtUtc: updatedAtUtc ?? this.updatedAtUtc,
+    version: version ?? this.version,
+  );
+  BucketListItem copyWithCompanion(BucketListItemsCompanion data) {
+    return BucketListItem(
+      id: data.id.present ? data.id.value : this.id,
+      profileId: data.profileId.present ? data.profileId.value : this.profileId,
+      name: data.name.present ? data.name.value : this.name,
+      estimatedAmountMinor: data.estimatedAmountMinor.present
+          ? data.estimatedAmountMinor.value
+          : this.estimatedAmountMinor,
+      savedAmountMinor: data.savedAmountMinor.present
+          ? data.savedAmountMinor.value
+          : this.savedAmountMinor,
+      reservedInBudgetMinor: data.reservedInBudgetMinor.present
+          ? data.reservedInBudgetMinor.value
+          : this.reservedInBudgetMinor,
+      actualAmountMinor: data.actualAmountMinor.present
+          ? data.actualAmountMinor.value
+          : this.actualAmountMinor,
+      currencyCode: data.currencyCode.present
+          ? data.currencyCode.value
+          : this.currencyCode,
+      priority: data.priority.present ? data.priority.value : this.priority,
+      targetYearMonth: data.targetYearMonth.present
+          ? data.targetYearMonth.value
+          : this.targetYearMonth,
+      dueDateUtc: data.dueDateUtc.present
+          ? data.dueDateUtc.value
+          : this.dueDateUtc,
+      reminderAtUtc: data.reminderAtUtc.present
+          ? data.reminderAtUtc.value
+          : this.reminderAtUtc,
+      categoryId: data.categoryId.present
+          ? data.categoryId.value
+          : this.categoryId,
+      linkedGoalId: data.linkedGoalId.present
+          ? data.linkedGoalId.value
+          : this.linkedGoalId,
+      purchasedTransactionId: data.purchasedTransactionId.present
+          ? data.purchasedTransactionId.value
+          : this.purchasedTransactionId,
+      note: data.note.present ? data.note.value : this.note,
+      postponeCount: data.postponeCount.present
+          ? data.postponeCount.value
+          : this.postponeCount,
+      status: data.status.present ? data.status.value : this.status,
+      createdAtUtc: data.createdAtUtc.present
+          ? data.createdAtUtc.value
+          : this.createdAtUtc,
+      updatedAtUtc: data.updatedAtUtc.present
+          ? data.updatedAtUtc.value
+          : this.updatedAtUtc,
+      version: data.version.present ? data.version.value : this.version,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BucketListItem(')
+          ..write('id: $id, ')
+          ..write('profileId: $profileId, ')
+          ..write('name: $name, ')
+          ..write('estimatedAmountMinor: $estimatedAmountMinor, ')
+          ..write('savedAmountMinor: $savedAmountMinor, ')
+          ..write('reservedInBudgetMinor: $reservedInBudgetMinor, ')
+          ..write('actualAmountMinor: $actualAmountMinor, ')
+          ..write('currencyCode: $currencyCode, ')
+          ..write('priority: $priority, ')
+          ..write('targetYearMonth: $targetYearMonth, ')
+          ..write('dueDateUtc: $dueDateUtc, ')
+          ..write('reminderAtUtc: $reminderAtUtc, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('linkedGoalId: $linkedGoalId, ')
+          ..write('purchasedTransactionId: $purchasedTransactionId, ')
+          ..write('note: $note, ')
+          ..write('postponeCount: $postponeCount, ')
+          ..write('status: $status, ')
+          ..write('createdAtUtc: $createdAtUtc, ')
+          ..write('updatedAtUtc: $updatedAtUtc, ')
+          ..write('version: $version')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+    id,
+    profileId,
+    name,
+    estimatedAmountMinor,
+    savedAmountMinor,
+    reservedInBudgetMinor,
+    actualAmountMinor,
+    currencyCode,
+    priority,
+    targetYearMonth,
+    dueDateUtc,
+    reminderAtUtc,
+    categoryId,
+    linkedGoalId,
+    purchasedTransactionId,
+    note,
+    postponeCount,
+    status,
+    createdAtUtc,
+    updatedAtUtc,
+    version,
+  ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is BucketListItem &&
+          other.id == this.id &&
+          other.profileId == this.profileId &&
+          other.name == this.name &&
+          other.estimatedAmountMinor == this.estimatedAmountMinor &&
+          other.savedAmountMinor == this.savedAmountMinor &&
+          other.reservedInBudgetMinor == this.reservedInBudgetMinor &&
+          other.actualAmountMinor == this.actualAmountMinor &&
+          other.currencyCode == this.currencyCode &&
+          other.priority == this.priority &&
+          other.targetYearMonth == this.targetYearMonth &&
+          other.dueDateUtc == this.dueDateUtc &&
+          other.reminderAtUtc == this.reminderAtUtc &&
+          other.categoryId == this.categoryId &&
+          other.linkedGoalId == this.linkedGoalId &&
+          other.purchasedTransactionId == this.purchasedTransactionId &&
+          other.note == this.note &&
+          other.postponeCount == this.postponeCount &&
+          other.status == this.status &&
+          other.createdAtUtc == this.createdAtUtc &&
+          other.updatedAtUtc == this.updatedAtUtc &&
+          other.version == this.version);
+}
+
+class BucketListItemsCompanion extends UpdateCompanion<BucketListItem> {
+  final Value<String> id;
+  final Value<String> profileId;
+  final Value<String> name;
+  final Value<int> estimatedAmountMinor;
+  final Value<int> savedAmountMinor;
+  final Value<int> reservedInBudgetMinor;
+  final Value<int?> actualAmountMinor;
+  final Value<String> currencyCode;
+  final Value<String> priority;
+  final Value<String> targetYearMonth;
+  final Value<String?> dueDateUtc;
+  final Value<String?> reminderAtUtc;
+  final Value<String?> categoryId;
+  final Value<String?> linkedGoalId;
+  final Value<String?> purchasedTransactionId;
+  final Value<String?> note;
+  final Value<int> postponeCount;
+  final Value<String> status;
+  final Value<String> createdAtUtc;
+  final Value<String> updatedAtUtc;
+  final Value<int> version;
+  final Value<int> rowid;
+  const BucketListItemsCompanion({
+    this.id = const Value.absent(),
+    this.profileId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.estimatedAmountMinor = const Value.absent(),
+    this.savedAmountMinor = const Value.absent(),
+    this.reservedInBudgetMinor = const Value.absent(),
+    this.actualAmountMinor = const Value.absent(),
+    this.currencyCode = const Value.absent(),
+    this.priority = const Value.absent(),
+    this.targetYearMonth = const Value.absent(),
+    this.dueDateUtc = const Value.absent(),
+    this.reminderAtUtc = const Value.absent(),
+    this.categoryId = const Value.absent(),
+    this.linkedGoalId = const Value.absent(),
+    this.purchasedTransactionId = const Value.absent(),
+    this.note = const Value.absent(),
+    this.postponeCount = const Value.absent(),
+    this.status = const Value.absent(),
+    this.createdAtUtc = const Value.absent(),
+    this.updatedAtUtc = const Value.absent(),
+    this.version = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  BucketListItemsCompanion.insert({
+    required String id,
+    required String profileId,
+    required String name,
+    required int estimatedAmountMinor,
+    this.savedAmountMinor = const Value.absent(),
+    this.reservedInBudgetMinor = const Value.absent(),
+    this.actualAmountMinor = const Value.absent(),
+    required String currencyCode,
+    required String priority,
+    required String targetYearMonth,
+    this.dueDateUtc = const Value.absent(),
+    this.reminderAtUtc = const Value.absent(),
+    this.categoryId = const Value.absent(),
+    this.linkedGoalId = const Value.absent(),
+    this.purchasedTransactionId = const Value.absent(),
+    this.note = const Value.absent(),
+    this.postponeCount = const Value.absent(),
+    required String status,
+    required String createdAtUtc,
+    required String updatedAtUtc,
+    this.version = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       profileId = Value(profileId),
+       name = Value(name),
+       estimatedAmountMinor = Value(estimatedAmountMinor),
+       currencyCode = Value(currencyCode),
+       priority = Value(priority),
+       targetYearMonth = Value(targetYearMonth),
+       status = Value(status),
+       createdAtUtc = Value(createdAtUtc),
+       updatedAtUtc = Value(updatedAtUtc);
+  static Insertable<BucketListItem> custom({
+    Expression<String>? id,
+    Expression<String>? profileId,
+    Expression<String>? name,
+    Expression<int>? estimatedAmountMinor,
+    Expression<int>? savedAmountMinor,
+    Expression<int>? reservedInBudgetMinor,
+    Expression<int>? actualAmountMinor,
+    Expression<String>? currencyCode,
+    Expression<String>? priority,
+    Expression<String>? targetYearMonth,
+    Expression<String>? dueDateUtc,
+    Expression<String>? reminderAtUtc,
+    Expression<String>? categoryId,
+    Expression<String>? linkedGoalId,
+    Expression<String>? purchasedTransactionId,
+    Expression<String>? note,
+    Expression<int>? postponeCount,
+    Expression<String>? status,
+    Expression<String>? createdAtUtc,
+    Expression<String>? updatedAtUtc,
+    Expression<int>? version,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (profileId != null) 'profile_id': profileId,
+      if (name != null) 'name': name,
+      if (estimatedAmountMinor != null)
+        'estimated_amount_minor': estimatedAmountMinor,
+      if (savedAmountMinor != null) 'saved_amount_minor': savedAmountMinor,
+      if (reservedInBudgetMinor != null)
+        'reserved_in_budget_minor': reservedInBudgetMinor,
+      if (actualAmountMinor != null) 'actual_amount_minor': actualAmountMinor,
+      if (currencyCode != null) 'currency_code': currencyCode,
+      if (priority != null) 'priority': priority,
+      if (targetYearMonth != null) 'target_year_month': targetYearMonth,
+      if (dueDateUtc != null) 'due_date_utc': dueDateUtc,
+      if (reminderAtUtc != null) 'reminder_at_utc': reminderAtUtc,
+      if (categoryId != null) 'category_id': categoryId,
+      if (linkedGoalId != null) 'linked_goal_id': linkedGoalId,
+      if (purchasedTransactionId != null)
+        'purchased_transaction_id': purchasedTransactionId,
+      if (note != null) 'note': note,
+      if (postponeCount != null) 'postpone_count': postponeCount,
+      if (status != null) 'status': status,
+      if (createdAtUtc != null) 'created_at_utc': createdAtUtc,
+      if (updatedAtUtc != null) 'updated_at_utc': updatedAtUtc,
+      if (version != null) 'version': version,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  BucketListItemsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? profileId,
+    Value<String>? name,
+    Value<int>? estimatedAmountMinor,
+    Value<int>? savedAmountMinor,
+    Value<int>? reservedInBudgetMinor,
+    Value<int?>? actualAmountMinor,
+    Value<String>? currencyCode,
+    Value<String>? priority,
+    Value<String>? targetYearMonth,
+    Value<String?>? dueDateUtc,
+    Value<String?>? reminderAtUtc,
+    Value<String?>? categoryId,
+    Value<String?>? linkedGoalId,
+    Value<String?>? purchasedTransactionId,
+    Value<String?>? note,
+    Value<int>? postponeCount,
+    Value<String>? status,
+    Value<String>? createdAtUtc,
+    Value<String>? updatedAtUtc,
+    Value<int>? version,
+    Value<int>? rowid,
+  }) {
+    return BucketListItemsCompanion(
+      id: id ?? this.id,
+      profileId: profileId ?? this.profileId,
+      name: name ?? this.name,
+      estimatedAmountMinor: estimatedAmountMinor ?? this.estimatedAmountMinor,
+      savedAmountMinor: savedAmountMinor ?? this.savedAmountMinor,
+      reservedInBudgetMinor:
+          reservedInBudgetMinor ?? this.reservedInBudgetMinor,
+      actualAmountMinor: actualAmountMinor ?? this.actualAmountMinor,
+      currencyCode: currencyCode ?? this.currencyCode,
+      priority: priority ?? this.priority,
+      targetYearMonth: targetYearMonth ?? this.targetYearMonth,
+      dueDateUtc: dueDateUtc ?? this.dueDateUtc,
+      reminderAtUtc: reminderAtUtc ?? this.reminderAtUtc,
+      categoryId: categoryId ?? this.categoryId,
+      linkedGoalId: linkedGoalId ?? this.linkedGoalId,
+      purchasedTransactionId:
+          purchasedTransactionId ?? this.purchasedTransactionId,
+      note: note ?? this.note,
+      postponeCount: postponeCount ?? this.postponeCount,
+      status: status ?? this.status,
+      createdAtUtc: createdAtUtc ?? this.createdAtUtc,
+      updatedAtUtc: updatedAtUtc ?? this.updatedAtUtc,
+      version: version ?? this.version,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (profileId.present) {
+      map['profile_id'] = Variable<String>(profileId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (estimatedAmountMinor.present) {
+      map['estimated_amount_minor'] = Variable<int>(estimatedAmountMinor.value);
+    }
+    if (savedAmountMinor.present) {
+      map['saved_amount_minor'] = Variable<int>(savedAmountMinor.value);
+    }
+    if (reservedInBudgetMinor.present) {
+      map['reserved_in_budget_minor'] = Variable<int>(
+        reservedInBudgetMinor.value,
+      );
+    }
+    if (actualAmountMinor.present) {
+      map['actual_amount_minor'] = Variable<int>(actualAmountMinor.value);
+    }
+    if (currencyCode.present) {
+      map['currency_code'] = Variable<String>(currencyCode.value);
+    }
+    if (priority.present) {
+      map['priority'] = Variable<String>(priority.value);
+    }
+    if (targetYearMonth.present) {
+      map['target_year_month'] = Variable<String>(targetYearMonth.value);
+    }
+    if (dueDateUtc.present) {
+      map['due_date_utc'] = Variable<String>(dueDateUtc.value);
+    }
+    if (reminderAtUtc.present) {
+      map['reminder_at_utc'] = Variable<String>(reminderAtUtc.value);
+    }
+    if (categoryId.present) {
+      map['category_id'] = Variable<String>(categoryId.value);
+    }
+    if (linkedGoalId.present) {
+      map['linked_goal_id'] = Variable<String>(linkedGoalId.value);
+    }
+    if (purchasedTransactionId.present) {
+      map['purchased_transaction_id'] = Variable<String>(
+        purchasedTransactionId.value,
+      );
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (postponeCount.present) {
+      map['postpone_count'] = Variable<int>(postponeCount.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (createdAtUtc.present) {
+      map['created_at_utc'] = Variable<String>(createdAtUtc.value);
+    }
+    if (updatedAtUtc.present) {
+      map['updated_at_utc'] = Variable<String>(updatedAtUtc.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BucketListItemsCompanion(')
+          ..write('id: $id, ')
+          ..write('profileId: $profileId, ')
+          ..write('name: $name, ')
+          ..write('estimatedAmountMinor: $estimatedAmountMinor, ')
+          ..write('savedAmountMinor: $savedAmountMinor, ')
+          ..write('reservedInBudgetMinor: $reservedInBudgetMinor, ')
+          ..write('actualAmountMinor: $actualAmountMinor, ')
+          ..write('currencyCode: $currencyCode, ')
+          ..write('priority: $priority, ')
+          ..write('targetYearMonth: $targetYearMonth, ')
+          ..write('dueDateUtc: $dueDateUtc, ')
+          ..write('reminderAtUtc: $reminderAtUtc, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('linkedGoalId: $linkedGoalId, ')
+          ..write('purchasedTransactionId: $purchasedTransactionId, ')
+          ..write('note: $note, ')
+          ..write('postponeCount: $postponeCount, ')
+          ..write('status: $status, ')
+          ..write('createdAtUtc: $createdAtUtc, ')
+          ..write('updatedAtUtc: $updatedAtUtc, ')
+          ..write('version: $version, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $ImportBatchesTable extends ImportBatches
     with TableInfo<$ImportBatchesTable, ImportBatche> {
   @override
@@ -19481,6 +20711,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $LoanInstallmentsTable loanInstallments = $LoanInstallmentsTable(
     this,
   );
+  late final $BucketListItemsTable bucketListItems = $BucketListItemsTable(
+    this,
+  );
   late final $ImportBatchesTable importBatches = $ImportBatchesTable(this);
   late final $ImportedTransactionsTable importedTransactions =
       $ImportedTransactionsTable(this);
@@ -19516,6 +20749,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     recurringRules,
     loans,
     loanInstallments,
+    bucketListItems,
     importBatches,
     importedTransactions,
     syncOutbox,
@@ -19906,6 +21140,26 @@ final class $$ProfilesTableReferences
 
     final cache = $_typedResult.readTableOrNull(
       _loanInstallmentsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$BucketListItemsTable, List<BucketListItem>>
+  _bucketListItemsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.bucketListItems,
+    aliasName: 'profiles__id__bucket_list_items__profile_id',
+  );
+
+  $$BucketListItemsTableProcessedTableManager get bucketListItemsRefs {
+    final manager = $$BucketListItemsTableTableManager(
+      $_db,
+      $_db.bucketListItems,
+    ).filter((f) => f.profileId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _bucketListItemsRefsTable($_db),
     );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
@@ -20542,6 +21796,31 @@ class $$ProfilesTableFilterComposer
           }) => $$LoanInstallmentsTableFilterComposer(
             $db: $db,
             $table: $db.loanInstallments,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> bucketListItemsRefs(
+    Expression<bool> Function($$BucketListItemsTableFilterComposer f) f,
+  ) {
+    final $$BucketListItemsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.bucketListItems,
+      getReferencedColumn: (t) => t.profileId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BucketListItemsTableFilterComposer(
+            $db: $db,
+            $table: $db.bucketListItems,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -21288,6 +22567,31 @@ class $$ProfilesTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> bucketListItemsRefs<T extends Object>(
+    Expression<T> Function($$BucketListItemsTableAnnotationComposer a) f,
+  ) {
+    final $$BucketListItemsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.bucketListItems,
+      getReferencedColumn: (t) => t.profileId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BucketListItemsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.bucketListItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
   Expression<T> importBatchesRefs<T extends Object>(
     Expression<T> Function($$ImportBatchesTableAnnotationComposer a) f,
   ) {
@@ -21473,6 +22777,7 @@ class $$ProfilesTableTableManager
             bool recurringRulesRefs,
             bool loansRefs,
             bool loanInstallmentsRefs,
+            bool bucketListItemsRefs,
             bool importBatchesRefs,
             bool importedTransactionsRefs,
             bool syncOutboxRefs,
@@ -21580,6 +22885,7 @@ class $$ProfilesTableTableManager
                 recurringRulesRefs = false,
                 loansRefs = false,
                 loanInstallmentsRefs = false,
+                bucketListItemsRefs = false,
                 importBatchesRefs = false,
                 importedTransactionsRefs = false,
                 syncOutboxRefs = false,
@@ -21608,6 +22914,7 @@ class $$ProfilesTableTableManager
                     if (recurringRulesRefs) db.recurringRules,
                     if (loansRefs) db.loans,
                     if (loanInstallmentsRefs) db.loanInstallments,
+                    if (bucketListItemsRefs) db.bucketListItems,
                     if (importBatchesRefs) db.importBatches,
                     if (importedTransactionsRefs) db.importedTransactions,
                     if (syncOutboxRefs) db.syncOutbox,
@@ -21996,6 +23303,27 @@ class $$ProfilesTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (bucketListItemsRefs)
+                        await $_getPrefetchedData<
+                          Profile,
+                          $ProfilesTable,
+                          BucketListItem
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ProfilesTableReferences
+                              ._bucketListItemsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ProfilesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).bucketListItemsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.profileId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                       if (importBatchesRefs)
                         await $_getPrefetchedData<
                           Profile,
@@ -22161,6 +23489,7 @@ typedef $$ProfilesTableProcessedTableManager =
         bool recurringRulesRefs,
         bool loansRefs,
         bool loanInstallmentsRefs,
+        bool bucketListItemsRefs,
         bool importBatchesRefs,
         bool importedTransactionsRefs,
         bool syncOutboxRefs,
@@ -22741,6 +24070,26 @@ final class $$CurrenciesTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$BucketListItemsTable, List<BucketListItem>>
+  _bucketListItemsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.bucketListItems,
+    aliasName: 'currencies__code__bucket_list_items__currency_code',
+  );
+
+  $$BucketListItemsTableProcessedTableManager get bucketListItemsRefs {
+    final manager =
+        $$BucketListItemsTableTableManager($_db, $_db.bucketListItems).filter(
+          (f) => f.currencyCode.code.sqlEquals($_itemColumn<String>('code')!),
+        );
+
+    final cache = $_typedResult.readTableOrNull(
+      _bucketListItemsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$CurrenciesTableFilterComposer
@@ -22918,6 +24267,31 @@ class $$CurrenciesTableFilterComposer
           }) => $$LoansTableFilterComposer(
             $db: $db,
             $table: $db.loans,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> bucketListItemsRefs(
+    Expression<bool> Function($$BucketListItemsTableFilterComposer f) f,
+  ) {
+    final $$BucketListItemsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.code,
+      referencedTable: $db.bucketListItems,
+      getReferencedColumn: (t) => t.currencyCode,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BucketListItemsTableFilterComposer(
+            $db: $db,
+            $table: $db.bucketListItems,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -23137,6 +24511,31 @@ class $$CurrenciesTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> bucketListItemsRefs<T extends Object>(
+    Expression<T> Function($$BucketListItemsTableAnnotationComposer a) f,
+  ) {
+    final $$BucketListItemsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.code,
+      referencedTable: $db.bucketListItems,
+      getReferencedColumn: (t) => t.currencyCode,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BucketListItemsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.bucketListItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$CurrenciesTableTableManager
@@ -23159,6 +24558,7 @@ class $$CurrenciesTableTableManager
             bool savingsGoalsRefs,
             bool recurringRulesRefs,
             bool loansRefs,
+            bool bucketListItemsRefs,
           })
         > {
   $$CurrenciesTableTableManager(_$AppDatabase db, $CurrenciesTable table)
@@ -23220,6 +24620,7 @@ class $$CurrenciesTableTableManager
                 savingsGoalsRefs = false,
                 recurringRulesRefs = false,
                 loansRefs = false,
+                bucketListItemsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -23230,6 +24631,7 @@ class $$CurrenciesTableTableManager
                     if (savingsGoalsRefs) db.savingsGoals,
                     if (recurringRulesRefs) db.recurringRules,
                     if (loansRefs) db.loans,
+                    if (bucketListItemsRefs) db.bucketListItems,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -23360,6 +24762,27 @@ class $$CurrenciesTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (bucketListItemsRefs)
+                        await $_getPrefetchedData<
+                          Currency,
+                          $CurrenciesTable,
+                          BucketListItem
+                        >(
+                          currentTable: table,
+                          referencedTable: $$CurrenciesTableReferences
+                              ._bucketListItemsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$CurrenciesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).bucketListItemsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.currencyCode == item.code,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -23387,6 +24810,7 @@ typedef $$CurrenciesTableProcessedTableManager =
         bool savingsGoalsRefs,
         bool recurringRulesRefs,
         bool loansRefs,
+        bool bucketListItemsRefs,
       })
     >;
 typedef $$ProfileCurrencyHistoryTableCreateCompanionBuilder =
@@ -32688,6 +34112,750 @@ typedef $$LoanInstallmentsTableProcessedTableManager =
       LoanInstallment,
       PrefetchHooks Function({bool profileId})
     >;
+typedef $$BucketListItemsTableCreateCompanionBuilder =
+    BucketListItemsCompanion Function({
+      required String id,
+      required String profileId,
+      required String name,
+      required int estimatedAmountMinor,
+      Value<int> savedAmountMinor,
+      Value<int> reservedInBudgetMinor,
+      Value<int?> actualAmountMinor,
+      required String currencyCode,
+      required String priority,
+      required String targetYearMonth,
+      Value<String?> dueDateUtc,
+      Value<String?> reminderAtUtc,
+      Value<String?> categoryId,
+      Value<String?> linkedGoalId,
+      Value<String?> purchasedTransactionId,
+      Value<String?> note,
+      Value<int> postponeCount,
+      required String status,
+      required String createdAtUtc,
+      required String updatedAtUtc,
+      Value<int> version,
+      Value<int> rowid,
+    });
+typedef $$BucketListItemsTableUpdateCompanionBuilder =
+    BucketListItemsCompanion Function({
+      Value<String> id,
+      Value<String> profileId,
+      Value<String> name,
+      Value<int> estimatedAmountMinor,
+      Value<int> savedAmountMinor,
+      Value<int> reservedInBudgetMinor,
+      Value<int?> actualAmountMinor,
+      Value<String> currencyCode,
+      Value<String> priority,
+      Value<String> targetYearMonth,
+      Value<String?> dueDateUtc,
+      Value<String?> reminderAtUtc,
+      Value<String?> categoryId,
+      Value<String?> linkedGoalId,
+      Value<String?> purchasedTransactionId,
+      Value<String?> note,
+      Value<int> postponeCount,
+      Value<String> status,
+      Value<String> createdAtUtc,
+      Value<String> updatedAtUtc,
+      Value<int> version,
+      Value<int> rowid,
+    });
+
+final class $$BucketListItemsTableReferences
+    extends
+        BaseReferences<_$AppDatabase, $BucketListItemsTable, BucketListItem> {
+  $$BucketListItemsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $ProfilesTable _profileIdTable(_$AppDatabase db) =>
+      db.profiles.createAlias('bucket_list_items__profile_id__profiles__id');
+
+  $$ProfilesTableProcessedTableManager get profileId {
+    final $_column = $_itemColumn<String>('profile_id')!;
+
+    final manager = $$ProfilesTableTableManager(
+      $_db,
+      $_db.profiles,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_profileIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $CurrenciesTable _currencyCodeTable(_$AppDatabase db) => db.currencies
+      .createAlias('bucket_list_items__currency_code__currencies__code');
+
+  $$CurrenciesTableProcessedTableManager get currencyCode {
+    final $_column = $_itemColumn<String>('currency_code')!;
+
+    final manager = $$CurrenciesTableTableManager(
+      $_db,
+      $_db.currencies,
+    ).filter((f) => f.code.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_currencyCodeTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$BucketListItemsTableFilterComposer
+    extends Composer<_$AppDatabase, $BucketListItemsTable> {
+  $$BucketListItemsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get estimatedAmountMinor => $composableBuilder(
+    column: $table.estimatedAmountMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get savedAmountMinor => $composableBuilder(
+    column: $table.savedAmountMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get reservedInBudgetMinor => $composableBuilder(
+    column: $table.reservedInBudgetMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get actualAmountMinor => $composableBuilder(
+    column: $table.actualAmountMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get priority => $composableBuilder(
+    column: $table.priority,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get targetYearMonth => $composableBuilder(
+    column: $table.targetYearMonth,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dueDateUtc => $composableBuilder(
+    column: $table.dueDateUtc,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reminderAtUtc => $composableBuilder(
+    column: $table.reminderAtUtc,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get linkedGoalId => $composableBuilder(
+    column: $table.linkedGoalId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get purchasedTransactionId => $composableBuilder(
+    column: $table.purchasedTransactionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get postponeCount => $composableBuilder(
+    column: $table.postponeCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAtUtc => $composableBuilder(
+    column: $table.createdAtUtc,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAtUtc => $composableBuilder(
+    column: $table.updatedAtUtc,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ProfilesTableFilterComposer get profileId {
+    final $$ProfilesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.profileId,
+      referencedTable: $db.profiles,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProfilesTableFilterComposer(
+            $db: $db,
+            $table: $db.profiles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$CurrenciesTableFilterComposer get currencyCode {
+    final $$CurrenciesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.currencyCode,
+      referencedTable: $db.currencies,
+      getReferencedColumn: (t) => t.code,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CurrenciesTableFilterComposer(
+            $db: $db,
+            $table: $db.currencies,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$BucketListItemsTableOrderingComposer
+    extends Composer<_$AppDatabase, $BucketListItemsTable> {
+  $$BucketListItemsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get estimatedAmountMinor => $composableBuilder(
+    column: $table.estimatedAmountMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get savedAmountMinor => $composableBuilder(
+    column: $table.savedAmountMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get reservedInBudgetMinor => $composableBuilder(
+    column: $table.reservedInBudgetMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get actualAmountMinor => $composableBuilder(
+    column: $table.actualAmountMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get priority => $composableBuilder(
+    column: $table.priority,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get targetYearMonth => $composableBuilder(
+    column: $table.targetYearMonth,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get dueDateUtc => $composableBuilder(
+    column: $table.dueDateUtc,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reminderAtUtc => $composableBuilder(
+    column: $table.reminderAtUtc,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get linkedGoalId => $composableBuilder(
+    column: $table.linkedGoalId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get purchasedTransactionId => $composableBuilder(
+    column: $table.purchasedTransactionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get postponeCount => $composableBuilder(
+    column: $table.postponeCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAtUtc => $composableBuilder(
+    column: $table.createdAtUtc,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAtUtc => $composableBuilder(
+    column: $table.updatedAtUtc,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ProfilesTableOrderingComposer get profileId {
+    final $$ProfilesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.profileId,
+      referencedTable: $db.profiles,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProfilesTableOrderingComposer(
+            $db: $db,
+            $table: $db.profiles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$CurrenciesTableOrderingComposer get currencyCode {
+    final $$CurrenciesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.currencyCode,
+      referencedTable: $db.currencies,
+      getReferencedColumn: (t) => t.code,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CurrenciesTableOrderingComposer(
+            $db: $db,
+            $table: $db.currencies,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$BucketListItemsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $BucketListItemsTable> {
+  $$BucketListItemsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<int> get estimatedAmountMinor => $composableBuilder(
+    column: $table.estimatedAmountMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get savedAmountMinor => $composableBuilder(
+    column: $table.savedAmountMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get reservedInBudgetMinor => $composableBuilder(
+    column: $table.reservedInBudgetMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get actualAmountMinor => $composableBuilder(
+    column: $table.actualAmountMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get priority =>
+      $composableBuilder(column: $table.priority, builder: (column) => column);
+
+  GeneratedColumn<String> get targetYearMonth => $composableBuilder(
+    column: $table.targetYearMonth,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get dueDateUtc => $composableBuilder(
+    column: $table.dueDateUtc,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get reminderAtUtc => $composableBuilder(
+    column: $table.reminderAtUtc,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get linkedGoalId => $composableBuilder(
+    column: $table.linkedGoalId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get purchasedTransactionId => $composableBuilder(
+    column: $table.purchasedTransactionId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<int> get postponeCount => $composableBuilder(
+    column: $table.postponeCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAtUtc => $composableBuilder(
+    column: $table.createdAtUtc,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get updatedAtUtc => $composableBuilder(
+    column: $table.updatedAtUtc,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  $$ProfilesTableAnnotationComposer get profileId {
+    final $$ProfilesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.profileId,
+      referencedTable: $db.profiles,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProfilesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.profiles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$CurrenciesTableAnnotationComposer get currencyCode {
+    final $$CurrenciesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.currencyCode,
+      referencedTable: $db.currencies,
+      getReferencedColumn: (t) => t.code,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CurrenciesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.currencies,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$BucketListItemsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $BucketListItemsTable,
+          BucketListItem,
+          $$BucketListItemsTableFilterComposer,
+          $$BucketListItemsTableOrderingComposer,
+          $$BucketListItemsTableAnnotationComposer,
+          $$BucketListItemsTableCreateCompanionBuilder,
+          $$BucketListItemsTableUpdateCompanionBuilder,
+          (BucketListItem, $$BucketListItemsTableReferences),
+          BucketListItem,
+          PrefetchHooks Function({bool profileId, bool currencyCode})
+        > {
+  $$BucketListItemsTableTableManager(
+    _$AppDatabase db,
+    $BucketListItemsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$BucketListItemsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$BucketListItemsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$BucketListItemsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> profileId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<int> estimatedAmountMinor = const Value.absent(),
+                Value<int> savedAmountMinor = const Value.absent(),
+                Value<int> reservedInBudgetMinor = const Value.absent(),
+                Value<int?> actualAmountMinor = const Value.absent(),
+                Value<String> currencyCode = const Value.absent(),
+                Value<String> priority = const Value.absent(),
+                Value<String> targetYearMonth = const Value.absent(),
+                Value<String?> dueDateUtc = const Value.absent(),
+                Value<String?> reminderAtUtc = const Value.absent(),
+                Value<String?> categoryId = const Value.absent(),
+                Value<String?> linkedGoalId = const Value.absent(),
+                Value<String?> purchasedTransactionId = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<int> postponeCount = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String> createdAtUtc = const Value.absent(),
+                Value<String> updatedAtUtc = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => BucketListItemsCompanion(
+                id: id,
+                profileId: profileId,
+                name: name,
+                estimatedAmountMinor: estimatedAmountMinor,
+                savedAmountMinor: savedAmountMinor,
+                reservedInBudgetMinor: reservedInBudgetMinor,
+                actualAmountMinor: actualAmountMinor,
+                currencyCode: currencyCode,
+                priority: priority,
+                targetYearMonth: targetYearMonth,
+                dueDateUtc: dueDateUtc,
+                reminderAtUtc: reminderAtUtc,
+                categoryId: categoryId,
+                linkedGoalId: linkedGoalId,
+                purchasedTransactionId: purchasedTransactionId,
+                note: note,
+                postponeCount: postponeCount,
+                status: status,
+                createdAtUtc: createdAtUtc,
+                updatedAtUtc: updatedAtUtc,
+                version: version,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String profileId,
+                required String name,
+                required int estimatedAmountMinor,
+                Value<int> savedAmountMinor = const Value.absent(),
+                Value<int> reservedInBudgetMinor = const Value.absent(),
+                Value<int?> actualAmountMinor = const Value.absent(),
+                required String currencyCode,
+                required String priority,
+                required String targetYearMonth,
+                Value<String?> dueDateUtc = const Value.absent(),
+                Value<String?> reminderAtUtc = const Value.absent(),
+                Value<String?> categoryId = const Value.absent(),
+                Value<String?> linkedGoalId = const Value.absent(),
+                Value<String?> purchasedTransactionId = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<int> postponeCount = const Value.absent(),
+                required String status,
+                required String createdAtUtc,
+                required String updatedAtUtc,
+                Value<int> version = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => BucketListItemsCompanion.insert(
+                id: id,
+                profileId: profileId,
+                name: name,
+                estimatedAmountMinor: estimatedAmountMinor,
+                savedAmountMinor: savedAmountMinor,
+                reservedInBudgetMinor: reservedInBudgetMinor,
+                actualAmountMinor: actualAmountMinor,
+                currencyCode: currencyCode,
+                priority: priority,
+                targetYearMonth: targetYearMonth,
+                dueDateUtc: dueDateUtc,
+                reminderAtUtc: reminderAtUtc,
+                categoryId: categoryId,
+                linkedGoalId: linkedGoalId,
+                purchasedTransactionId: purchasedTransactionId,
+                note: note,
+                postponeCount: postponeCount,
+                status: status,
+                createdAtUtc: createdAtUtc,
+                updatedAtUtc: updatedAtUtc,
+                version: version,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$BucketListItemsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({profileId = false, currencyCode = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (profileId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.profileId,
+                                referencedTable:
+                                    $$BucketListItemsTableReferences
+                                        ._profileIdTable(db),
+                                referencedColumn:
+                                    $$BucketListItemsTableReferences
+                                        ._profileIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+                    if (currencyCode) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.currencyCode,
+                                referencedTable:
+                                    $$BucketListItemsTableReferences
+                                        ._currencyCodeTable(db),
+                                referencedColumn:
+                                    $$BucketListItemsTableReferences
+                                        ._currencyCodeTable(db)
+                                        .code,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$BucketListItemsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $BucketListItemsTable,
+      BucketListItem,
+      $$BucketListItemsTableFilterComposer,
+      $$BucketListItemsTableOrderingComposer,
+      $$BucketListItemsTableAnnotationComposer,
+      $$BucketListItemsTableCreateCompanionBuilder,
+      $$BucketListItemsTableUpdateCompanionBuilder,
+      (BucketListItem, $$BucketListItemsTableReferences),
+      BucketListItem,
+      PrefetchHooks Function({bool profileId, bool currencyCode})
+    >;
 typedef $$ImportBatchesTableCreateCompanionBuilder =
     ImportBatchesCompanion Function({
       required String id,
@@ -35713,6 +37881,8 @@ class $AppDatabaseManager {
       $$LoansTableTableManager(_db, _db.loans);
   $$LoanInstallmentsTableTableManager get loanInstallments =>
       $$LoanInstallmentsTableTableManager(_db, _db.loanInstallments);
+  $$BucketListItemsTableTableManager get bucketListItems =>
+      $$BucketListItemsTableTableManager(_db, _db.bucketListItems);
   $$ImportBatchesTableTableManager get importBatches =>
       $$ImportBatchesTableTableManager(_db, _db.importBatches);
   $$ImportedTransactionsTableTableManager get importedTransactions =>

@@ -2,14 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/financial_engine/currency.dart';
 import '../../../../core/financial_engine/loan_amortizer.dart';
 import '../../../../core/financial_engine/money.dart';
 import '../../../../core/utilities/clock.dart';
+import '../../../../shared/widgets/classic_motion.dart';
 import '../../../../shared/widgets/enterprise_layout.dart';
 import '../../../../shared/widgets/fintech_widgets.dart';
+import '../../../../shared/widgets/flagship_visuals.dart';
 import '../../../../shared/widgets/modern_dialogs.dart';
 import '../../../../shared/widgets/modern_dropdown.dart';
 import '../../../../shared/widgets/modern_inputs.dart';
@@ -19,6 +22,7 @@ import '../../../dashboard/presentation/bloc/dashboard_bloc.dart';
 import '../../../profiles/domain/entities/profile_entity.dart';
 import '../../../profiles/presentation/bloc/active_profile_cubit.dart';
 import '../../../settings/presentation/bloc/settings_cubit.dart';
+import '../../../transactions/presentation/bloc/transactions_bloc.dart';
 import '../../data/repositories/drift_loan_repository.dart';
 import '../../domain/entities/loan_entity.dart';
 
@@ -70,64 +74,177 @@ class _LoansPageState extends State<LoansPage> {
     final canPost = profile.permissions.canPostTransaction;
 
     return Scaffold(
-      appBar: const EnterpriseAppBar(title: Text('Loans & Installments')),
-      floatingActionButton: hasLoans && canPost
-          ? FloatingActionButton.extended(
-              onPressed: () => _openCreateLoanSheet(context, profile, repo),
-              icon: const Icon(Icons.add_rounded),
-              label: const Text('Add Loan'),
-            )
-          : null,
-      body: _loading && _loans == null
-          ? const DashboardSkeletonView()
-          : !hasLoans
-          ? EmptyStateView(
-              icon: Icons.request_quote_outlined,
-              title: 'No loans tracked',
-              description:
-                  'Track mortgages, vehicle loans, or business credit with exact Reducing-Balance EMI amortization splitting Principal, Interest, and Fees.',
-              actionLabel: canPost ? 'Add Loan' : null,
-              onAction: canPost
-                  ? () => _openCreateLoanSheet(context, profile, repo)
-                  : null,
-            )
-          : RefreshIndicator(
-              onRefresh: () => _reload(profile),
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: EnterprisePageContainer.responsivePadding(
-                  context,
-                  bottom: 96,
-                ),
-                child: EnterprisePageContainer(
-                  maxWidth: AppBreakpoints.maxContentWidth,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      for (var i = 0; i < loans.length; i++) ...[
-                        StaggeredFadeSlide(
-                          index: i,
-                          child: _LoanCard(
-                            loan: loans[i],
-                            masked: hideBalances,
-                            canPost: canPost,
-                            onPayInstallment: (inst) => _payInstallment(
-                              context,
-                              profile,
-                              repo,
-                              loans[i],
-                              inst,
+      appBar: EnterpriseAppBar(
+        title: const Text('Loans & Installments'),
+        actions: [
+          TextButton.icon(
+            key: const Key('loans_emi_guard_btn'),
+            onPressed: () => context.push('/life-planner?tab=1'),
+            icon: const Icon(Icons.speed_rounded, size: 17),
+            label: const Text('EMI Guard'),
+          ),
+          const SizedBox(width: AppSpacing.xs),
+        ],
+      ),
+      floatingActionButton: ClassicAnimatedFab(
+        child: hasLoans && canPost
+            ? FloatingActionButton.extended(
+                key: const ValueKey<String>('loans_fab'),
+                onPressed: () => _openCreateLoanSheet(context, profile, repo),
+                icon: const Icon(Icons.add_rounded),
+                label: const Text('Add Loan'),
+              )
+            : null,
+      ),
+      body: ClassicContentSwitcher(
+        stateKey: _loading && _loans == null
+            ? 'loading'
+            : !hasLoans
+            ? 'empty'
+            : 'loaded',
+        child: _loading && _loans == null
+            ? const DashboardSkeletonView()
+            : !hasLoans
+            ? EmptyStateView(
+                icon: Icons.request_quote_outlined,
+                title: 'No loans tracked',
+                description:
+                    'Track mortgages, vehicle loans, or business credit with exact Reducing-Balance EMI amortization splitting Principal, Interest, and Fees.',
+                actionLabel: canPost ? 'Add Loan' : null,
+                onAction: canPost
+                    ? () => _openCreateLoanSheet(context, profile, repo)
+                    : null,
+              )
+            : RefreshIndicator(
+                onRefresh: () => _reload(profile),
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: EnterprisePageContainer.responsivePadding(
+                    context,
+                    bottom: 96,
+                  ),
+                  child: EnterprisePageContainer(
+                    maxWidth: AppBreakpoints.maxContentWidth,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Builder(
+                          builder: (context) {
+                            final totalPrincipal = loans.fold<int>(
+                              0,
+                              (s, l) => s + l.principal.amountMinor,
+                            );
+                            final totalRemaining = loans.fold<int>(
+                              0,
+                              (s, l) => s + l.remainingPrincipalMinor,
+                            );
+                            final paidPct = totalPrincipal > 0
+                                ? (((totalPrincipal - totalRemaining) /
+                                              totalPrincipal) *
+                                          100)
+                                      .round()
+                                      .clamp(0, 100)
+                                : 0;
+                            final ccy = loans.first.principal.currencyCode;
+                            return StaggeredFadeSlide(
+                              index: 0,
+                              child: FintechSignatureHero(
+                                tone: SignatureHeroTone.amber,
+                                padding: const EdgeInsets.all(AppSpacing.md),
+                                child: Row(
+                                  children: [
+                                    RadialScoreGauge(
+                                      score: paidPct,
+                                      label: 'PAID',
+                                      activeColor: const Color(0xFFFBBF24),
+                                      secondaryColor: const Color(0xFF34D399),
+                                      trackColor: Colors.white.withValues(
+                                        alpha: 0.14,
+                                      ),
+                                      textColor: Colors.white,
+                                      subtitleColor: Colors.white.withValues(
+                                        alpha: 0.70,
+                                      ),
+                                      size: 78,
+                                      strokeWidth: 7,
+                                      masked: hideBalances,
+                                    ),
+                                    const SizedBox(width: 14),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          HeroGlassPill(
+                                            label:
+                                                '${loans.length} ACTIVE ${loans.length == 1 ? 'LOAN' : 'LOANS'}',
+                                            dotColor: const Color(0xFFFBBF24),
+                                            foreground: const Color(0xFFFDE68A),
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            'Remaining Principal',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .labelSmall
+                                                ?.copyWith(
+                                                  color: Colors.white
+                                                      .withValues(alpha: 0.68),
+                                                ),
+                                          ),
+                                          FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            alignment: Alignment.centerLeft,
+                                            child: AnimatedMoneyText(
+                                              money: Money(
+                                                amountMinor: totalRemaining,
+                                                currencyCode: ccy,
+                                              ),
+                                              masked: hideBalances,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .headlineSmall
+                                                  ?.copyWith(
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.w900,
+                                                  ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        for (var i = 0; i < loans.length; i++) ...[
+                          StaggeredFadeSlide(
+                            index: i + 1,
+                            child: _LoanCard(
+                              loan: loans[i],
+                              masked: hideBalances,
+                              canPost: canPost,
+                              onPayInstallment: (inst) => _payInstallment(
+                                context,
+                                profile,
+                                repo,
+                                loans[i],
+                                inst,
+                              ),
                             ),
                           ),
-                        ),
-                        if (i < loans.length - 1)
-                          const SizedBox(height: AppSpacing.sm),
+                          if (i < loans.length - 1)
+                            const SizedBox(height: AppSpacing.sm),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
+      ),
     );
   }
 
@@ -193,7 +310,12 @@ class _LoansPageState extends State<LoansPage> {
       ),
     );
     if (result == true && context.mounted) {
-      context.read<DashboardBloc>().add(const DashboardRefreshRequested());
+      try {
+        context.read<DashboardBloc>().add(const DashboardRefreshRequested());
+      } catch (_) {}
+      try {
+        context.read<TransactionsBloc>().add(const TransactionsLoadRequested());
+      } catch (_) {}
       await _reload(profile);
     }
   }

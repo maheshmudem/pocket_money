@@ -11,6 +11,8 @@ import '../../../../core/financial_engine/fx_rate.dart';
 import '../../../../core/financial_engine/money.dart';
 import '../../../../core/utilities/clock.dart';
 import '../../../../core/utilities/id_generator.dart';
+import '../../../../shared/widgets/classic_motion.dart';
+import '../../../../shared/widgets/editorial_bento_kit.dart';
 import '../../../../shared/widgets/enterprise_layout.dart';
 import '../../../../shared/widgets/fintech_widgets.dart';
 import '../../../../shared/widgets/modern_dialogs.dart';
@@ -116,57 +118,143 @@ class _TransactionsPageState extends State<TransactionsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: FintechSearchField(
-                            controller: _searchCtrl,
-                            hintText: 'Search ledger...',
-                            height: 42,
-                            onChanged: (q) {
-                              context.read<TransactionsBloc>().add(
-                                TransactionsSearchChanged(q),
-                              );
-                            },
-                            onClear: () {
-                              context.read<TransactionsBloc>().add(
-                                const TransactionsSearchChanged(''),
-                              );
-                            },
+                    if (!isDesktopTable) ...[
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Transaction Journal',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.titleLarge
+                                      ?.copyWith(fontSize: 21),
+                                ),
+                                Text(
+                                  'Double-entry statements & audit trail',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.labelSmall
+                                      ?.copyWith(
+                                        color: cfo.subtleText,
+                                        fontSize: 11,
+                                      ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        if (profile.permissions.canPostTransaction) ...[
-                          const SizedBox(width: 8),
-                          SizedBox(
-                            height: 42,
-                            child: FilledButton.tonalIcon(
-                              key: const Key('ledger_quick_add_btn'),
-                              style: FilledButton.styleFrom(
-                                backgroundColor: scheme.primaryContainer,
-                                foregroundColor: scheme.primary,
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: isDesktopTable ? 14 : 12,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                    AppSpacing.radiusFull,
+                          if (profile.permissions.canPostTransaction) ...[
+                            const SizedBox(width: 8),
+                            Builder(
+                              builder: (context) {
+                                final isDark =
+                                    Theme.of(context).brightness ==
+                                    Brightness.dark;
+                                return SizedBox(
+                                  height: 36,
+                                  child: FilledButton.icon(
+                                    key: const Key('ledger_quick_add_btn'),
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: isDark
+                                          ? const Color(0xFFF4F6FA)
+                                          : const Color(0xFF0F172A),
+                                      foregroundColor: isDark
+                                          ? const Color(0xFF0B0D14)
+                                          : Colors.white,
+                                      elevation: 0,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 13,
+                                      ),
+                                      minimumSize: const Size(0, 36),
+                                      shape: const StadiumBorder(),
+                                    ),
+                                    onPressed: () => openAddTransactionSheet(
+                                      context,
+                                      profile,
+                                    ),
+                                    icon: const Icon(
+                                      Icons.add_rounded,
+                                      size: 17,
+                                    ),
+                                    label: const Text(
+                                      'New',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 12.5,
+                                      ),
+                                    ),
                                   ),
+                                );
+                              },
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      FintechSearchField(
+                        controller: _searchCtrl,
+                        hintText: 'Search ledger...',
+                        height: 42,
+                        elevated: true,
+                        onChanged: (q) {
+                          context.read<TransactionsBloc>().add(
+                            TransactionsSearchChanged(q),
+                          );
+                        },
+                        onClear: () {
+                          context.read<TransactionsBloc>().add(
+                            const TransactionsSearchChanged(''),
+                          );
+                        },
+                      ),
+                    ] else
+                      Row(
+                        children: [
+                          Expanded(
+                            child: FintechSearchField(
+                              controller: _searchCtrl,
+                              hintText: 'Search ledger...',
+                              height: 42,
+                              elevated: true,
+                              onChanged: (q) {
+                                context.read<TransactionsBloc>().add(
+                                  TransactionsSearchChanged(q),
+                                );
+                              },
+                              onClear: () {
+                                context.read<TransactionsBloc>().add(
+                                  const TransactionsSearchChanged(''),
+                                );
+                              },
+                            ),
+                          ),
+                          if (profile.permissions.canPostTransaction) ...[
+                            const SizedBox(width: 8),
+                            SizedBox(
+                              height: 42,
+                              child: FilledButton.icon(
+                                key: const Key('ledger_quick_add_btn'),
+                                style: FilledButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
+                                  minimumSize: const Size(0, 42),
+                                  shape: const StadiumBorder(),
                                 ),
-                              ),
-                              onPressed: () =>
-                                  openAddTransactionSheet(context, profile),
-                              icon: const Icon(Icons.add_rounded, size: 18),
-                              label: Text(
-                                isDesktopTable ? 'Add Entry' : 'New',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
+                                onPressed: () =>
+                                    openAddTransactionSheet(context, profile),
+                                icon: const Icon(Icons.add_rounded, size: 18),
+                                label: const Text(
+                                  'Add Entry',
+                                  style: TextStyle(fontWeight: FontWeight.w700),
                                 ),
                               ),
                             ),
-                          ),
+                          ],
                         ],
-                      ],
-                    ),
+                      ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
@@ -326,17 +414,33 @@ class _TransactionsPageState extends State<TransactionsPage> {
               Expanded(
                 child: BlocBuilder<TransactionsBloc, TransactionsState>(
                   builder: (context, state) {
+                    final stateKey =
+                        state.status == TransactionsStatus.loading &&
+                            state.items.isEmpty
+                        ? 'loading'
+                        : state.status == TransactionsStatus.failure
+                        ? 'failure'
+                        : state.items.isEmpty
+                        ? 'empty_${_selectedType?.name ?? ''}_$_onlyDrafts'
+                        : 'list';
+
                     if (state.status == TransactionsStatus.loading &&
                         state.items.isEmpty) {
-                      return const DashboardSkeletonView();
+                      return ClassicContentSwitcher(
+                        stateKey: stateKey,
+                        child: const DashboardSkeletonView(),
+                      );
                     }
                     if (state.status == TransactionsStatus.failure) {
-                      return ErrorStateView(
-                        message:
-                            state.failure?.message ??
-                            'Could not load transactions.',
-                        onRetry: () => context.read<TransactionsBloc>().add(
-                          const TransactionsLoadRequested(),
+                      return ClassicContentSwitcher(
+                        stateKey: stateKey,
+                        child: ErrorStateView(
+                          message:
+                              state.failure?.message ??
+                              'Could not load transactions.',
+                          onRetry: () => context.read<TransactionsBloc>().add(
+                            const TransactionsLoadRequested(),
+                          ),
                         ),
                       );
                     }
@@ -345,29 +449,32 @@ class _TransactionsPageState extends State<TransactionsPage> {
                           _selectedType != null ||
                           _onlyDrafts ||
                           _searchCtrl.text.trim().isNotEmpty;
-                      return EmptyStateView(
-                        icon: hasFilter
-                            ? Icons.filter_alt_off_outlined
-                            : Icons.receipt_long_outlined,
-                        title: hasFilter
-                            ? 'No matching entries'
-                            : 'No transactions yet',
-                        description: hasFilter
-                            ? 'No entries match your active search or filter criteria.'
-                            : 'Record an expense, income, own-account transfer, or split transaction. Every posted entry creates a balanced double-entry journal.',
-                        actionLabel: hasFilter
-                            ? 'Reset Filters'
-                            : profile.permissions.canPostTransaction
-                            ? 'Add Transaction'
-                            : null,
-                        onAction: hasFilter
-                            ? () {
-                                _searchCtrl.clear();
-                                _applyFilter(type: null, onlyDrafts: false);
-                              }
-                            : profile.permissions.canPostTransaction
-                            ? () => openAddTransactionSheet(context, profile)
-                            : null,
+                      return ClassicContentSwitcher(
+                        stateKey: stateKey,
+                        child: EmptyStateView(
+                          icon: hasFilter
+                              ? Icons.filter_alt_off_outlined
+                              : Icons.receipt_long_outlined,
+                          title: hasFilter
+                              ? 'No matching entries'
+                              : 'No transactions yet',
+                          description: hasFilter
+                              ? 'No entries match your active search or filter criteria.'
+                              : 'Record an expense, income, own-account transfer, or split transaction. Every posted entry creates a balanced double-entry journal.',
+                          actionLabel: hasFilter
+                              ? 'Reset Filters'
+                              : profile.permissions.canPostTransaction
+                              ? 'Add Transaction'
+                              : null,
+                          onAction: hasFilter
+                              ? () {
+                                  _searchCtrl.clear();
+                                  _applyFilter(type: null, onlyDrafts: false);
+                                }
+                              : profile.permissions.canPostTransaction
+                              ? () => openAddTransactionSheet(context, profile)
+                              : null,
+                        ),
                       );
                     }
 
@@ -444,65 +551,72 @@ class _TransactionsPageState extends State<TransactionsPage> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  _LedgerPulseStrip(
-                                    totalCount: state.totalCount,
-                                    inflow: Money(
-                                      amountMinor: inflowMinor,
-                                      currencyCode: ccy,
+                                  StaggeredFadeSlide(
+                                    index: 0,
+                                    child: _LedgerPulseStrip(
+                                      totalCount: state.totalCount,
+                                      inflow: Money(
+                                        amountMinor: inflowMinor,
+                                        currencyCode: ccy,
+                                      ),
+                                      outflow: Money(
+                                        amountMinor: outflowMinor,
+                                        currencyCode: ccy,
+                                      ),
+                                      net: Money(
+                                        amountMinor: inflowMinor - outflowMinor,
+                                        currencyCode: ccy,
+                                      ),
+                                      masked: hideBalances,
                                     ),
-                                    outflow: Money(
-                                      amountMinor: outflowMinor,
-                                      currencyCode: ccy,
-                                    ),
-                                    net: Money(
-                                      amountMinor: inflowMinor - outflowMinor,
-                                      currencyCode: ccy,
-                                    ),
-                                    masked: hideBalances,
                                   ),
-                                  if (secondaryFilterLabel != null ||
-                                      hasScopedFilter) ...[
-                                    const SizedBox(height: 6),
-                                    Wrap(
-                                      spacing: 6,
-                                      runSpacing: 4,
-                                      children: [
-                                        if (secondaryFilterLabel != null)
-                                          InputChip(
-                                            visualDensity:
-                                                VisualDensity.compact,
-                                            label: Text(
-                                              'Filter: $secondaryFilterLabel',
+                                  ClassicExpandCollapse(
+                                    expanded:
+                                        secondaryFilterLabel != null ||
+                                        hasScopedFilter,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(top: 6),
+                                      child: Wrap(
+                                        spacing: 6,
+                                        runSpacing: 4,
+                                        children: [
+                                          if (secondaryFilterLabel != null)
+                                            InputChip(
+                                              visualDensity:
+                                                  VisualDensity.compact,
+                                              label: Text(
+                                                'Filter: $secondaryFilterLabel',
+                                              ),
+                                              onDeleted: () => _applyFilter(
+                                                type: null,
+                                                onlyDrafts: false,
+                                              ),
                                             ),
-                                            onDeleted: () => _applyFilter(
-                                              type: null,
-                                              onlyDrafts: false,
+                                          if (hasScopedFilter)
+                                            InputChip(
+                                              key: const Key(
+                                                'ledger_scoped_filter_chip',
+                                              ),
+                                              visualDensity:
+                                                  VisualDensity.compact,
+                                              label: Text(
+                                                activeFilter.accountId != null
+                                                    ? 'Account Filter'
+                                                    : activeFilter.categoryId !=
+                                                          null
+                                                    ? 'Category Filter'
+                                                    : 'Date Filter',
+                                              ),
+                                              onDeleted: () => _applyFilter(
+                                                type: _selectedType,
+                                                onlyDrafts: _onlyDrafts,
+                                                clearScopedFilters: true,
+                                              ),
                                             ),
-                                          ),
-                                        if (hasScopedFilter)
-                                          InputChip(
-                                            key: const Key(
-                                              'ledger_scoped_filter_chip',
-                                            ),
-                                            visualDensity:
-                                                VisualDensity.compact,
-                                            label: Text(
-                                              activeFilter.accountId != null
-                                                  ? 'Account Filter'
-                                                  : activeFilter.categoryId !=
-                                                        null
-                                                  ? 'Category Filter'
-                                                  : 'Date Filter',
-                                            ),
-                                            onDeleted: () => _applyFilter(
-                                              type: _selectedType,
-                                              onlyDrafts: _onlyDrafts,
-                                              clearScopedFilters: true,
-                                            ),
-                                          ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
-                                  ],
+                                  ),
                                 ],
                               ),
                             ),
@@ -580,7 +694,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
                               ),
                             ),
                           SliverPadding(
-                            padding: EdgeInsets.fromLTRB(hPad, 0, hPad, 32),
+                            padding: EdgeInsets.fromLTRB(hPad, 0, hPad, 36),
                             sliver: SliverList.builder(
                               itemCount:
                                   groups.length + (state.hasMore ? 1 : 0),
@@ -617,21 +731,27 @@ class _TransactionsPageState extends State<TransactionsPage> {
                                 }
 
                                 final group = groups[gIdx];
+                                final dayCard = _GroupedDayLedgerCard(
+                                  group: group,
+                                  currencyCode: ccy,
+                                  isDesktopTable: isDesktopTable,
+                                  hideBalances: hideBalances,
+                                  onTapTx: (txId) => _openTransactionDetail(
+                                    context,
+                                    profile,
+                                    txId,
+                                  ),
+                                );
                                 return Padding(
                                   padding: EdgeInsets.only(
                                     top: gIdx == 0 ? 2 : 12,
                                   ),
-                                  child: _GroupedDayLedgerCard(
-                                    group: group,
-                                    currencyCode: ccy,
-                                    isDesktopTable: isDesktopTable,
-                                    hideBalances: hideBalances,
-                                    onTapTx: (txId) => _openTransactionDetail(
-                                      context,
-                                      profile,
-                                      txId,
-                                    ),
-                                  ),
+                                  child: gIdx < 6
+                                      ? StaggeredFadeSlide(
+                                          index: gIdx + 1,
+                                          child: dayCard,
+                                        )
+                                      : dayCard,
                                 );
                               },
                             ),
@@ -1319,8 +1439,32 @@ class _AddTransactionSheetBodyState extends State<_AddTransactionSheetBody> {
                                   horizontal: 4,
                                 ),
                                 decoration: BoxDecoration(
+                                  gradient: _txType == item.$1
+                                      ? LinearGradient(
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                          colors: switch (item.$1) {
+                                            TransactionType.expense => [
+                                              cfo.expense,
+                                              const Color(0xFFBE123C),
+                                            ],
+                                            TransactionType.income => [
+                                              cfo.income,
+                                              const Color(0xFF047857),
+                                            ],
+                                            TransactionType.transfer => const [
+                                              Color(0xFF2563EB),
+                                              Color(0xFF0284C7),
+                                            ],
+                                            _ => [
+                                              scheme.primary,
+                                              scheme.secondary,
+                                            ],
+                                          },
+                                        )
+                                      : null,
                                   color: _txType == item.$1
-                                      ? cfo.surfaceElevated
+                                      ? null
                                       : Colors.transparent,
                                   borderRadius: BorderRadius.circular(
                                     AppSpacing.radiusFull,
@@ -1329,8 +1473,8 @@ class _AddTransactionSheetBodyState extends State<_AddTransactionSheetBody> {
                                       ? [
                                           BoxShadow(
                                             color: cfo.cardShadow,
-                                            blurRadius: 6,
-                                            offset: const Offset(0, 2),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 3),
                                           ),
                                         ]
                                       : null,
@@ -1345,15 +1489,7 @@ class _AddTransactionSheetBodyState extends State<_AddTransactionSheetBody> {
                                         .labelMedium
                                         ?.copyWith(
                                           color: _txType == item.$1
-                                              ? switch (item.$1) {
-                                                  TransactionType.expense =>
-                                                    cfo.expense,
-                                                  TransactionType.income =>
-                                                    cfo.income,
-                                                  TransactionType.transfer =>
-                                                    cfo.transfer,
-                                                  _ => scheme.primary,
-                                                }
+                                              ? Colors.white
                                               : cfo.subtleText,
                                           fontWeight: _txType == item.$1
                                               ? FontWeight.w800
@@ -2067,7 +2203,6 @@ class _LedgerSegmentedFilter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cfo = context.cfoColors;
-    final scheme = Theme.of(context).colorScheme;
     final duration = AppMotion.resolve(context, AppMotion.fast);
 
     return Container(
@@ -2085,6 +2220,14 @@ class _LedgerSegmentedFilter extends StatelessWidget {
               child: Builder(
                 builder: (context) {
                   final active = !hasSecondaryActive && selectedType == seg.$1;
+                  final isDarkSeg =
+                      Theme.of(context).brightness == Brightness.dark;
+                  final activeBg = isDarkSeg
+                      ? const Color(0xFFF4F6FA)
+                      : const Color(0xFF0F172A);
+                  final activeFg = isDarkSeg
+                      ? const Color(0xFF0B0D14)
+                      : Colors.white;
                   return GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: () => onSelect(seg.$1),
@@ -2093,17 +2236,17 @@ class _LedgerSegmentedFilter extends StatelessWidget {
                       curve: Curves.easeOutCubic,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: active
-                            ? cfo.surfaceElevated
-                            : Colors.transparent,
+                        color: active ? activeBg : Colors.transparent,
                         borderRadius: BorderRadius.circular(
                           AppSpacing.radiusFull,
                         ),
                         boxShadow: active
                             ? [
                                 BoxShadow(
-                                  color: cfo.cardShadow,
-                                  blurRadius: 6,
+                                  color: const Color(
+                                    0xFF0F172A,
+                                  ).withValues(alpha: isDarkSeg ? 0.34 : 0.16),
+                                  blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
                               ]
@@ -2118,9 +2261,7 @@ class _LedgerSegmentedFilter extends StatelessWidget {
                             maxLines: 1,
                             style: Theme.of(context).textTheme.labelMedium
                                 ?.copyWith(
-                                  color: active
-                                      ? scheme.primary
-                                      : cfo.subtleText,
+                                  color: active ? activeFg : cfo.subtleText,
                                   fontWeight: active
                                       ? FontWeight.w800
                                       : FontWeight.w600,
@@ -2533,152 +2674,13 @@ class _LedgerPulseStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cfo = context.cfoColors;
-    final totalFlow = inflow.amountMinor + outflow.amountMinor;
-    final inflowShare = totalFlow > 0
-        ? (inflow.amountMinor / totalFlow).clamp(0.0, 1.0)
-        : 0.0;
-
-    return DecoratedBox(
+    return DualWingCashflowBar(
       key: const Key('ledger_pulse_strip'),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        boxShadow: [
-          BoxShadow(
-            color: cfo.cardShadow,
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        child: Material(
-          color: cfo.surfaceElevated,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            side: BorderSide(color: cfo.divider),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 9,
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _LedgerMiniMetric(
-                        label: 'Inflow',
-                        money: inflow,
-                        masked: masked,
-                        color: cfo.income,
-                      ),
-                    ),
-                    Container(width: 1, height: 26, color: cfo.divider),
-                    Expanded(
-                      child: _LedgerMiniMetric(
-                        label: 'Outflow',
-                        money: outflow,
-                        masked: masked,
-                        color: cfo.expense,
-                      ),
-                    ),
-                    Container(width: 1, height: 26, color: cfo.divider),
-                    Expanded(
-                      child: _LedgerMiniMetric(
-                        label: 'Net ($totalCount)',
-                        money: net,
-                        masked: masked,
-                        showPlusSign: true,
-                        color: net.amountMinor >= 0 ? cfo.income : cfo.expense,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (totalFlow > 0 && !masked)
-                SizedBox(
-                  height: 3,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (inflowShare > 0)
-                        Expanded(
-                          flex: (inflowShare * 1000).round().clamp(1, 1000),
-                          child: ColoredBox(color: cfo.income),
-                        ),
-                      if (inflowShare < 1.0)
-                        Expanded(
-                          flex: ((1.0 - inflowShare) * 1000).round().clamp(
-                            1,
-                            1000,
-                          ),
-                          child: ColoredBox(color: cfo.expense),
-                        ),
-                    ],
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _LedgerMiniMetric extends StatelessWidget {
-  const _LedgerMiniMetric({
-    required this.label,
-    required this.money,
-    required this.masked,
-    required this.color,
-    this.showPlusSign = false,
-  });
-
-  final String label;
-  final Money money;
-  final bool masked;
-  final Color color;
-  final bool showPlusSign;
-
-  @override
-  Widget build(BuildContext context) {
-    final cfo = context.cfoColors;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: cfo.subtleText,
-              fontSize: 10.5,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 1),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: MoneyText(
-              money: money,
-              masked: masked,
-              showPlusSign: showPlusSign,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: color,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-        ],
-      ),
+      totalCount: totalCount,
+      inflow: inflow,
+      outflow: outflow,
+      net: net,
+      masked: masked,
     );
   }
 }

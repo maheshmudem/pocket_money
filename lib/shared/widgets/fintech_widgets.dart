@@ -63,8 +63,10 @@ class MoneyText extends StatelessWidget {
     };
 
     final icon = switch (semanticKind) {
-      'income' => Icons.arrow_downward_rounded,
-      'expense' => Icons.arrow_upward_rounded,
+      'income' =>
+        showPlusSign ? Icons.trending_up_rounded : Icons.south_west_rounded,
+      'expense' =>
+        showPlusSign ? Icons.trending_down_rounded : Icons.north_east_rounded,
       'transfer' => Icons.swap_horiz_rounded,
       _ => null,
     };
@@ -75,6 +77,7 @@ class MoneyText extends StatelessWidget {
 
     final effectiveStyle = (style ?? Theme.of(context).textTheme.bodyLarge)
         ?.copyWith(
+          fontFamily: 'PlusJakartaSans',
           color: effectiveColor,
           fontFeatures: const [FontFeature.tabularFigures()],
         );
@@ -86,6 +89,43 @@ class MoneyText extends StatelessWidget {
       semanticContextLabel: semanticContextLabel,
     );
 
+    final baseFontSize =
+        effectiveStyle?.fontSize ??
+        Theme.of(context).textTheme.bodyLarge?.fontSize ??
+        15.0;
+    final dotIdx = !masked ? formatted.lastIndexOf('.') : -1;
+    final hasSplitDecimal =
+        dotIdx > 0 && (formatted.length - dotIdx) <= 4 && baseFontSize >= 13.5;
+
+    final Widget textWidget = hasSplitDecimal
+        ? Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: formatted.substring(0, dotIdx),
+                  style: effectiveStyle,
+                ),
+                TextSpan(
+                  text: formatted.substring(dotIdx),
+                  style: effectiveStyle?.copyWith(
+                    fontSize: (baseFontSize * 0.72).clamp(9.5, 24.0),
+                    fontWeight: FontWeight.w600,
+                    color: effectiveColor.withValues(alpha: 0.62),
+                    letterSpacing: 0,
+                  ),
+                ),
+              ],
+            ),
+            maxLines: maxLines,
+            overflow: TextOverflow.ellipsis,
+          )
+        : Text(
+            formatted,
+            style: effectiveStyle,
+            maxLines: maxLines,
+            overflow: TextOverflow.ellipsis,
+          );
+
     return Semantics(
       label: semanticLabel,
       child: ExcludeSemantics(
@@ -95,19 +135,12 @@ class MoneyText extends StatelessWidget {
             if (icon != null) ...[
               Icon(
                 icon,
-                size: (effectiveStyle?.fontSize ?? 16) * 0.92,
+                size: baseFontSize * 0.90,
                 color: effectiveStyle?.color ?? color,
               ),
               const SizedBox(width: 3),
             ],
-            Flexible(
-              child: Text(
-                formatted,
-                style: effectiveStyle,
-                maxLines: maxLines,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
+            Flexible(child: textWidget),
           ],
         ),
       ),
@@ -292,12 +325,13 @@ class _StaggeredFadeSlideState extends State<StaggeredFadeSlide>
   late final AnimationController _controller;
   late final Animation<double> _opacity;
   late final Animation<Offset> _slide;
+  late final Animation<double> _scale;
 
   @override
   void initState() {
     super.initState();
-    final delayMs = math.min(widget.index * 35, 140);
-    final animMs = 220;
+    final delayMs = math.min(widget.index * 32, 160);
+    const animMs = 260;
     final totalMs = delayMs + animMs;
     final startFrac = delayMs / totalMs;
 
@@ -307,13 +341,14 @@ class _StaggeredFadeSlideState extends State<StaggeredFadeSlide>
     );
     final curved = CurvedAnimation(
       parent: _controller,
-      curve: Interval(startFrac, 1.0, curve: Curves.easeOutCubic),
+      curve: Interval(startFrac, 1.0, curve: AppMotion.curveEmphasized),
     );
     _opacity = curved;
     _slide = Tween<Offset>(
-      begin: const Offset(0, 0.04),
+      begin: const Offset(0, 0.032),
       end: Offset.zero,
     ).animate(curved);
+    _scale = Tween<double>(begin: 0.988, end: 1.0).animate(curved);
   }
 
   @override
@@ -339,7 +374,10 @@ class _StaggeredFadeSlideState extends State<StaggeredFadeSlide>
     }
     return FadeTransition(
       opacity: _opacity,
-      child: SlideTransition(position: _slide, child: widget.child),
+      child: SlideTransition(
+        position: _slide,
+        child: ScaleTransition(scale: _scale, child: widget.child),
+      ),
     );
   }
 }
@@ -389,23 +427,34 @@ class _PressScaleCardState extends State<PressScaleCard> {
         ? cfo.hoverBorder
         : (widget.borderColor ?? cfo.divider);
 
-    final cardBox = DecoratedBox(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBox = AnimatedContainer(
+      duration: duration,
+      curve: AppMotion.curveStandard,
       decoration: BoxDecoration(
+        color: resolvedBg,
         borderRadius: BorderRadius.circular(widget.borderRadius),
+        border: Border.all(color: resolvedBorder, width: isDark ? 1.15 : 1.1),
         boxShadow: [
           BoxShadow(
             color: cfo.cardShadow,
-            blurRadius: _hovered && isInteractive ? 20 : 14,
-            offset: Offset(0, _hovered && isInteractive ? 6 : 4),
+            blurRadius: _hovered && isInteractive ? 22 : 16,
+            offset: Offset(0, _hovered && isInteractive ? 8 : 5),
+          ),
+          BoxShadow(
+            color: (isDark ? Colors.black : const Color(0xFF1D2C5E)).withValues(
+              alpha: isDark ? 0.32 : 0.05,
+            ),
+            blurRadius: 3,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Material(
-        color: resolvedBg,
+        color: Colors.transparent,
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(widget.borderRadius),
-          side: BorderSide(color: resolvedBorder),
         ),
         child: isInteractive
             ? InkWell(
@@ -427,9 +476,9 @@ class _PressScaleCardState extends State<PressScaleCard> {
     }
 
     return AnimatedScale(
-      scale: _pressed ? 0.985 : 1.0,
+      scale: _pressed ? 0.982 : 1.0,
       duration: duration,
-      curve: Curves.easeOut,
+      curve: AppMotion.curveSpring,
       child: cardBox,
     );
   }
@@ -700,58 +749,94 @@ class EmptyStateView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final cfo = context.cfoColors;
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.xl),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 440),
-          child: PressScaleCard(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.xl,
-              vertical: AppSpacing.xl,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: scheme.primaryContainer.withValues(alpha: 0.45),
-                    shape: BoxShape.circle,
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: StaggeredFadeSlide(
+            index: 0,
+            child: PressScaleCard(
+              borderRadius: AppSpacing.radiusXl,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.xl,
+                vertical: AppSpacing.xxl,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 96,
+                    height: 96,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: cfo.heroGradientEnd.withValues(alpha: 0.25),
+                      ),
+                      gradient: RadialGradient(
+                        colors: [
+                          cfo.heroGradientEnd.withValues(alpha: 0.14),
+                          cfo.heroGradientEnd.withValues(alpha: 0.0),
+                        ],
+                      ),
+                    ),
+                    child: Center(
+                      child: Container(
+                        width: 66,
+                        height: 66,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: scheme.primary,
+                          border: Border.all(
+                            color: cfo.heroGradientEnd.withValues(alpha: 0.45),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: cfo.cardShadow,
+                              blurRadius: 14,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: Icon(icon, size: 28, color: scheme.onPrimary),
+                      ),
+                    ),
                   ),
-                  child: IconSquircle(
-                    icon: icon,
-                    iconColor: scheme.primary,
-                    backgroundColor: scheme.primaryContainer,
-                    size: 60,
-                    iconScale: 0.48,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  title,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  description,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: context.cfoColors.subtleText,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                if (actionLabel != null && onAction != null) ...[
                   const SizedBox(height: AppSpacing.lg),
-                  FilledButton.icon(
-                    onPressed: onAction,
-                    icon: const Icon(Icons.add_rounded),
-                    label: Text(actionLabel!),
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    description,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: cfo.subtleText,
+                      height: 1.48,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  if (actionLabel != null && onAction != null) ...[
+                    const SizedBox(height: AppSpacing.lg),
+                    FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        shape: const StadiumBorder(),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 14,
+                        ),
+                      ),
+                      onPressed: onAction,
+                      icon: const Icon(Icons.add_rounded, size: 19),
+                      label: Text(actionLabel!),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),
@@ -780,44 +865,47 @@ class ErrorStateView extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.xl),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 440),
-          child: PressScaleCard(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.xl,
-              vertical: AppSpacing.xl,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconSquircle(
-                  icon: Icons.error_outline_rounded,
-                  iconColor: cfo.expense,
-                  backgroundColor: cfo.expenseContainer,
-                  size: 60,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  message,
-                  style: Theme.of(context).textTheme.bodyLarge,
-                  textAlign: TextAlign.center,
-                ),
-                if (code != null) ...[
-                  const SizedBox(height: AppSpacing.xxs),
-                  Text(
-                    'Code: $code',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.labelSmall?.copyWith(color: cfo.subtleText),
+          child: StaggeredFadeSlide(
+            index: 0,
+            child: PressScaleCard(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.xl,
+                vertical: AppSpacing.xl,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconSquircle(
+                    icon: Icons.error_outline_rounded,
+                    iconColor: cfo.expense,
+                    backgroundColor: cfo.expenseContainer,
+                    size: 60,
                   ),
-                ],
-                if (onRetry != null) ...[
                   const SizedBox(height: AppSpacing.md),
-                  OutlinedButton.icon(
-                    onPressed: onRetry,
-                    icon: const Icon(Icons.refresh_rounded),
-                    label: const Text('Try again'),
+                  Text(
+                    message,
+                    style: Theme.of(context).textTheme.bodyLarge,
+                    textAlign: TextAlign.center,
                   ),
+                  if (code != null) ...[
+                    const SizedBox(height: AppSpacing.xxs),
+                    Text(
+                      'Code: $code',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.labelSmall?.copyWith(color: cfo.subtleText),
+                    ),
+                  ],
+                  if (onRetry != null) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    OutlinedButton.icon(
+                      onPressed: onRetry,
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text('Try again'),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),
@@ -924,7 +1012,7 @@ class RadialScoreGauge extends StatelessWidget {
           ),
           child: Center(
             child: Padding(
-              padding: EdgeInsets.all(strokeWidth + 4),
+              padding: EdgeInsets.all(strokeWidth + 9),
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Column(
@@ -934,6 +1022,7 @@ class RadialScoreGauge extends StatelessWidget {
                       masked ? '••' : '$shownScore',
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(
+                            fontFamily: 'PlusJakartaSans',
                             color: resolvedText,
                             fontWeight: FontWeight.w800,
                             height: 1.0,
@@ -945,9 +1034,10 @@ class RadialScoreGauge extends StatelessWidget {
                       label.toUpperCase(),
                       maxLines: 1,
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontFamily: 'PlusJakartaSans',
                         color: resolvedSub,
                         fontWeight: FontWeight.w700,
-                        fontSize: 9.5,
+                        fontSize: 9.0,
                         letterSpacing: 0.6,
                       ),
                     ),
@@ -996,12 +1086,50 @@ class _RadialArcPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = (math.min(size.width, size.height) - strokeWidth) / 2;
-    if (radius <= 0) return;
+    final outerRadius = (math.min(size.width, size.height) - strokeWidth) / 2;
+    if (outerRadius <= 0) return;
 
     const startAngle = 140 * math.pi / 180;
     const totalSweep = 260 * math.pi / 180;
+    final radius = outerRadius - 3;
     final rect = Rect.fromCircle(center: center, radius: radius);
+
+    // Subtle CRED radial halo disc inside dial center
+    final centerGlow = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          startColor.withValues(alpha: 0.16),
+          startColor.withValues(alpha: 0.0),
+        ],
+      ).createShader(Rect.fromCircle(center: center, radius: radius * 0.85));
+    canvas.drawCircle(center, radius * 0.85, centerGlow);
+
+    // Subtle luxury watch-dial precision tick marks around the inner perimeter
+    const tickCount = 24;
+    final tickPaint = Paint()
+      ..color = trackColor.withValues(alpha: 0.85)
+      ..strokeCap = StrokeCap.round;
+    for (var i = 0; i <= tickCount; i++) {
+      final frac = i / tickCount;
+      final angle = startAngle + totalSweep * frac;
+      final isMajor = i % 6 == 0;
+      final innerR = radius - strokeWidth * 0.72 - (isMajor ? 3.2 : 1.6);
+      final outerR = radius - strokeWidth * 0.72;
+      if (innerR > 4) {
+        tickPaint.strokeWidth = isMajor ? 1.3 : 0.8;
+        canvas.drawLine(
+          Offset(
+            center.dx + innerR * math.cos(angle),
+            center.dy + innerR * math.sin(angle),
+          ),
+          Offset(
+            center.dx + outerR * math.cos(angle),
+            center.dy + outerR * math.sin(angle),
+          ),
+          tickPaint,
+        );
+      }
+    }
 
     final trackPaint = Paint()
       ..color = trackColor
@@ -1016,6 +1144,15 @@ class _RadialArcPainter extends CustomPainter {
 
     final sweep = totalSweep * clamped;
     const capPad = 0.14;
+
+    // Soft ambient halo glow behind active arc
+    final glowPaint = Paint()
+      ..color = startColor.withValues(alpha: 0.20)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth + 5
+      ..strokeCap = StrokeCap.round;
+    canvas.drawArc(rect, startAngle, sweep, false, glowPaint);
+
     final activePaint = Paint()
       ..shader = SweepGradient(
         startAngle: 0.0,
@@ -1309,24 +1446,24 @@ class FintechThemeModePicker extends StatelessWidget {
         mode: ThemeMode.light,
         label: 'Light',
         icon: Icons.light_mode_rounded,
-        swatchA: Color(0xFFF8FAFC),
-        swatchB: Color(0xFF4F46E5),
+        swatchA: Color(0xFFF4F6FD),
+        swatchB: Color(0xFF2563EB),
       ),
       (
         key: Key('theme_mode_dark'),
         mode: ThemeMode.dark,
         label: 'Dark',
         icon: Icons.dark_mode_rounded,
-        swatchA: Color(0xFF0B0F1A),
-        swatchB: Color(0xFF818CF8),
+        swatchA: Color(0xFF05070E),
+        swatchB: Color(0xFF8B5CF6),
       ),
       (
         key: Key('theme_mode_auto'),
         mode: ThemeMode.system,
         label: 'Auto',
         icon: Icons.brightness_auto_rounded,
-        swatchA: Color(0xFFF8FAFC),
-        swatchB: Color(0xFF0F172A),
+        swatchA: Color(0xFF2563EB),
+        swatchB: Color(0xFF7C3AED),
       ),
     ];
 
@@ -1453,8 +1590,13 @@ class FintechSegmentedControl<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cfo = context.cfoColors;
-    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activePillBg = isDark
+        ? const Color(0xFFF4F6FA)
+        : const Color(0xFF0F172A);
+    final activePillFg = isDark ? const Color(0xFF0B0D14) : Colors.white;
     final duration = AppMotion.resolve(context, AppMotion.fast);
+    final standardDuration = AppMotion.resolve(context, AppMotion.standard);
     final selectedIdx = options
         .indexWhere((o) => o.value == selected)
         .clamp(0, math.max(0, options.length - 1));
@@ -1479,24 +1621,23 @@ class FintechSegmentedControl<T> extends StatelessWidget {
             children: [
               if (options.isNotEmpty)
                 AnimatedAlign(
-                  duration: duration,
-                  curve: Curves.easeOutCubic,
+                  duration: standardDuration,
+                  curve: AppMotion.curveSpring,
                   alignment: Alignment(alignmentX, 0),
                   child: Container(
                     width: segWidth,
                     height: double.infinity,
                     decoration: BoxDecoration(
-                      color: cfo.surfaceElevated,
+                      color: activePillBg,
                       borderRadius: BorderRadius.circular(
                         AppSpacing.radiusSm + 1,
                       ),
-                      border: Border.all(
-                        color: scheme.primary.withValues(alpha: 0.25),
-                      ),
                       boxShadow: [
                         BoxShadow(
-                          color: cfo.cardShadow,
-                          blurRadius: 6,
+                          color: const Color(
+                            0xFF0F172A,
+                          ).withValues(alpha: isDark ? 0.35 : 0.16),
+                          blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
                       ],
@@ -1534,37 +1675,45 @@ class FintechSegmentedControl<T> extends StatelessWidget {
                                         opt.icon,
                                         size: 14,
                                         color: opt.value == selected
-                                            ? scheme.primary
+                                            ? activePillFg
                                             : cfo.subtleText,
                                       ),
                                       const SizedBox(width: 4),
                                     ],
-                                    Text(
-                                      opt.label,
-                                      maxLines: 1,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelSmall
-                                          ?.copyWith(
-                                            color: opt.value == selected
-                                                ? scheme.onSurface
-                                                : cfo.subtleText,
-                                            fontWeight: opt.value == selected
-                                                ? FontWeight.w800
-                                                : FontWeight.w600,
-                                          ),
+                                    AnimatedDefaultTextStyle(
+                                      duration: duration,
+                                      curve: AppMotion.curveStandard,
+                                      style:
+                                          (Theme.of(
+                                                    context,
+                                                  ).textTheme.labelSmall ??
+                                                  const TextStyle())
+                                              .copyWith(
+                                                color: opt.value == selected
+                                                    ? activePillFg
+                                                    : cfo.subtleText,
+                                                fontWeight:
+                                                    opt.value == selected
+                                                    ? FontWeight.w800
+                                                    : FontWeight.w600,
+                                              ),
+                                      child: Text(opt.label, maxLines: 1),
                                     ),
                                     if (opt.badgeCount != null &&
                                         opt.badgeCount! > 0) ...[
                                       const SizedBox(width: 4),
-                                      Container(
+                                      AnimatedContainer(
+                                        duration: duration,
+                                        curve: AppMotion.curveStandard,
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 5,
                                           vertical: 1,
                                         ),
                                         decoration: BoxDecoration(
                                           color: opt.value == selected
-                                              ? scheme.primaryContainer
+                                              ? activePillFg.withValues(
+                                                  alpha: 0.18,
+                                                )
                                               : cfo.divider,
                                           borderRadius: BorderRadius.circular(
                                             AppSpacing.radiusFull,
@@ -1579,7 +1728,7 @@ class FintechSegmentedControl<T> extends StatelessWidget {
                                                 fontSize: 9.5,
                                                 fontWeight: FontWeight.w800,
                                                 color: opt.value == selected
-                                                    ? scheme.primary
+                                                    ? Colors.white
                                                     : cfo.subtleText,
                                                 fontFeatures: const [
                                                   FontFeature.tabularFigures(),

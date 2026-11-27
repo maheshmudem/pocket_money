@@ -15,9 +15,10 @@ import 'package:share_plus/share_plus.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/financial_engine/money.dart';
 import '../../../../core/utilities/clock.dart';
+import '../../../../shared/widgets/editorial_bento_kit.dart';
 import '../../../../shared/widgets/enterprise_layout.dart';
 import '../../../../shared/widgets/fintech_widgets.dart';
-import '../../../../shared/widgets/modern_dialogs.dart';
+import '../../../../shared/widgets/flagship_visuals.dart';
 import '../../../accounts/domain/entities/financial_account_entity.dart';
 import '../../../budgets/domain/entities/budget_entity.dart';
 import '../../../budgets/presentation/pages/budgets_page.dart';
@@ -43,12 +44,12 @@ class AnalyticsReportsPage extends StatefulWidget {
 
 class _AnalyticsReportsPageState extends State<AnalyticsReportsPage> {
   static const _chartPalette = [
-    Color(0xFF4F46E5),
+    Color(0xFF1D4ED8),
     Color(0xFF059669),
     Color(0xFF0284C7),
+    Color(0xFF475569),
     Color(0xFFD97706),
-    Color(0xFFE11D48),
-    Color(0xFF7C3AED),
+    Color(0xFFDC2626),
     Color(0xFF0D9488),
   ];
 
@@ -159,7 +160,8 @@ class _AnalyticsReportsPageState extends State<AnalyticsReportsPage> {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: EnterprisePageContainer.responsivePadding(
               context,
-              bottom: 40,
+              top: 10,
+              bottom: 44,
             ),
             child: EnterprisePageContainer(
               maxWidth: AppBreakpoints.maxDashboardWidth,
@@ -184,10 +186,16 @@ class _AnalyticsReportsPageState extends State<AnalyticsReportsPage> {
                     child: _InsightsKpiGrid(
                       isWide: isWide,
                       savingsRatePct: savingsRatePct,
+                      incomeMinor: incomeMinor,
+                      spendMinor: netSpendMinor,
                       netFlowMoney: netFlowMoney,
                       netCashFlowMinor: netCashFlowMinor,
                       avgDailyMoney: avgDailyMoney,
                       totalAssets: liquidAssetsMoney,
+                      runwayMonths: runwayMonths,
+                      spendSparkline: summary.monthlyCashFlow
+                          .map((pt) => pt.expenseMinor.toDouble())
+                          .toList(),
                       masked: hideBalances,
                     ),
                   );
@@ -677,7 +685,7 @@ class _InsightsPeriodHeader extends StatelessWidget {
                 ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
               ),
               Text(
-                'CFO health telemetry • Live ledger analytics',
+                'Live CFO telemetry & ledger analytics',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(
@@ -779,23 +787,21 @@ class _FinancialHealthHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cfo = context.cfoColors;
-    final scheme = Theme.of(context).colorScheme;
     final gaugePrimary = health.score >= 70
-        ? cfo.income
+        ? const Color(0xFF34D399)
         : health.score >= 45
-        ? cfo.warning
-        : cfo.expense;
+        ? const Color(0xFFFBBF24)
+        : const Color(0xFFF87171);
     final gaugeSecondary = health.score >= 70
-        ? cfo.accentCyan
+        ? const Color(0xFF60A5FA)
         : health.score >= 45
         ? const Color(0xFFF59E0B)
-        : const Color(0xFFF43F5E);
-    final accent = health.score >= 70
-        ? ModernDialogAccent.success
+        : const Color(0xFFEF4444);
+    final heroTone = health.score >= 70
+        ? SignatureHeroTone.indigo
         : health.score >= 45
-        ? ModernDialogAccent.warning
-        : ModernDialogAccent.danger;
+        ? SignatureHeroTone.amber
+        : SignatureHeroTone.crimson;
 
     final solvencyText = liabilitiesMinor <= 0
         ? 'Debt-Free'
@@ -809,9 +815,10 @@ class _FinancialHealthHeroCard extends StatelessWidget {
         ? '${runwayMonths!.clamp(0.1, 99.0).toStringAsFixed(1)} mo runway'
         : 'Strong buffer';
 
-    return FintechAccentCard(
-      accent: accent,
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+    return FullBleedTheaterStage(
+      tone: heroTone,
+      isWideCard: true,
+      padding: const EdgeInsets.fromLTRB(18, 17, 18, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -824,42 +831,77 @@ class _FinancialHealthHeroCard extends StatelessWidget {
                 label: health.grade,
                 activeColor: gaugePrimary,
                 secondaryColor: gaugeSecondary,
-                trackColor: cfo.surfaceTonal,
-                textColor: scheme.onSurface,
-                subtitleColor: cfo.subtleText,
-                size: 86,
-                strokeWidth: 7.5,
+                trackColor: Colors.white.withValues(alpha: 0.14),
+                textColor: Colors.white,
+                subtitleColor: Colors.white.withValues(alpha: 0.72),
+                size: 102,
+                strokeWidth: 8.5,
                 masked: masked,
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    FintechStatusPill(
+                    HeroGlassPill(
                       label: 'CFO HEALTH SCORE',
-                      showDot: true,
+                      dotColor: gaugePrimary,
                       foreground: gaugePrimary,
-                      background: health.score >= 70
-                          ? cfo.incomeContainer
-                          : health.score >= 45
-                          ? cfo.warningContainer
-                          : cfo.expenseContainer,
                     ),
-                    const SizedBox(height: 7),
+                    const SizedBox(height: 8),
                     Text(
                       health.headline,
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        height: 1.35,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                        height: 1.3,
                       ),
                     ),
                   ],
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 13),
+          // 3 Live Pillar Sub-Score Micro Bars
+          HeroGlassWell(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _HealthPillarMeter(
+                    label: 'Savings',
+                    score: health.savingsPts,
+                    maxScore: 40,
+                    color: const Color(0xFF34D399),
+                    masked: masked,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _HealthPillarMeter(
+                    label: 'Solvency',
+                    score: health.solvencyPts,
+                    maxScore: 30,
+                    color: const Color(0xFF38BDF8),
+                    masked: masked,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _HealthPillarMeter(
+                    label: 'Budgets',
+                    score: health.budgetPts,
+                    maxScore: 20,
+                    color: const Color(0xFFFBBF24),
+                    masked: masked,
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 11),
           Wrap(
@@ -885,6 +927,71 @@ class _FinancialHealthHeroCard extends StatelessWidget {
   }
 }
 
+class _HealthPillarMeter extends StatelessWidget {
+  const _HealthPillarMeter({
+    required this.label,
+    required this.score,
+    required this.maxScore,
+    required this.color,
+    required this.masked,
+  });
+
+  final String label;
+  final int score;
+  final int maxScore;
+  final Color color;
+  final bool masked;
+
+  @override
+  Widget build(BuildContext context) {
+    final ratio = maxScore > 0 ? (score / maxScore).clamp(0.0, 1.0) : 0.0;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.72),
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            Text(
+              masked ? '••' : '$score/$maxScore',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+          child: Container(
+            height: 4,
+            color: Colors.white.withValues(alpha: 0.14),
+            alignment: Alignment.centerLeft,
+            child: FractionallySizedBox(
+              widthFactor: masked ? 0.0 : ratio,
+              child: Container(color: color),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _GlassPill extends StatelessWidget {
   const _GlassPill({required this.icon, required this.label});
 
@@ -893,34 +1000,10 @@ class _GlassPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cfo = context.cfoColors;
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-      decoration: BoxDecoration(
-        color: cfo.surfaceTonal,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-        border: Border.all(color: cfo.divider.withValues(alpha: 0.7)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: scheme.primary),
-          const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: scheme.onSurface,
-                fontWeight: FontWeight.w700,
-                fontSize: 10.5,
-              ),
-            ),
-          ),
-        ],
-      ),
+    return HeroGlassPill(
+      icon: icon,
+      label: label,
+      foreground: Colors.white.withValues(alpha: 0.90),
     );
   }
 }
@@ -929,25 +1012,37 @@ class _InsightsKpiGrid extends StatelessWidget {
   const _InsightsKpiGrid({
     required this.isWide,
     required this.savingsRatePct,
+    required this.incomeMinor,
+    required this.spendMinor,
     required this.netFlowMoney,
     required this.netCashFlowMinor,
     required this.avgDailyMoney,
     required this.totalAssets,
+    required this.runwayMonths,
+    required this.spendSparkline,
     required this.masked,
   });
 
   final bool isWide;
   final int savingsRatePct;
+  final int incomeMinor;
+  final int spendMinor;
   final Money netFlowMoney;
   final int netCashFlowMinor;
   final Money avgDailyMoney;
   final Money totalAssets;
+  final double? runwayMonths;
+  final List<double> spendSparkline;
   final bool masked;
 
   @override
   Widget build(BuildContext context) {
     final cfo = context.cfoColors;
     final scheme = Theme.of(context).colorScheme;
+    final savingsColor = savingsRatePct >= 0 ? cfo.income : cfo.expense;
+    final runwayRatio = runwayMonths != null
+        ? (runwayMonths! / 12.0).clamp(0.08, 1.0)
+        : (totalAssets.amountMinor > 0 ? 0.85 : 0.0);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -959,86 +1054,112 @@ class _InsightsKpiGrid extends StatelessWidget {
           spacing: gap,
           runSpacing: gap,
           children: [
+            // Tile 1: Savings Rate + Animated Mini Ring Meter
             SizedBox(
               width: w,
-              child: PressScaleCard(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              child: WatermarkBentoCard(
+                accent: savingsColor,
+                watermarkIcon: Icons.savings_rounded,
+                padding: const EdgeInsets.all(14),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Row(
-                      children: [
-                        IconSquircle(
-                          icon: Icons.savings_outlined,
-                          iconColor: savingsRatePct >= 0
-                              ? cfo.income
-                              : cfo.expense,
-                          backgroundColor: savingsRatePct >= 0
-                              ? cfo.incomeContainer
-                              : cfo.expenseContainer,
-                          size: 32,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
                             'Savings Rate',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.labelMedium
-                                ?.copyWith(color: cfo.subtleText),
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: cfo.subtleText,
+                                  fontWeight: FontWeight.w700,
+                                ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        masked ? '••••' : '$savingsRatePct%',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: savingsRatePct >= 0 ? cfo.income : cfo.expense,
-                          fontWeight: FontWeight.w800,
-                          fontFeatures: const [FontFeature.tabularFigures()],
-                        ),
+                          const SizedBox(height: 6),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              masked ? '••••' : '$savingsRatePct%',
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(
+                                    fontFamily: 'PlusJakartaSans',
+                                    color: savingsColor,
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 23,
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                  ),
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            savingsRatePct >= 20
+                                ? 'Above target'
+                                : 'Target 20%',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(color: cfo.subtleText, fontSize: 10),
+                          ),
+                        ],
                       ),
+                    ),
+                    const SizedBox(width: 6),
+                    MiniRingGauge(
+                      progress: (savingsRatePct / 100.0).clamp(0.0, 1.0),
+                      color: savingsColor,
+                      size: 46,
+                      strokeWidth: 4.8,
+                      masked: masked,
                     ),
                   ],
                 ),
               ),
             ),
+
+            // Tile 2: Net Period Flow + Visual In/Out Ratio Bar
             SizedBox(
               width: w,
-              child: PressScaleCard(
-                padding: const EdgeInsets.all(AppSpacing.md),
+              child: WatermarkBentoCard(
+                accent: scheme.primary,
+                watermarkIcon: Icons.trending_up_rounded,
+                padding: const EdgeInsets.all(14),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Row(
                       children: [
-                        IconSquircle(
-                          icon: Icons.compare_arrows_rounded,
-                          iconColor: netCashFlowMinor >= 0
-                              ? cfo.income
-                              : cfo.expense,
-                          backgroundColor: netCashFlowMinor >= 0
-                              ? cfo.incomeContainer
-                              : cfo.expenseContainer,
-                          size: 32,
-                        ),
-                        const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             'Net Period Flow',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.labelMedium
-                                ?.copyWith(color: cfo.subtleText),
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: cfo.subtleText,
+                                  fontWeight: FontWeight.w700,
+                                ),
                           ),
+                        ),
+                        Icon(
+                          netCashFlowMinor >= 0
+                              ? Icons.trending_up_rounded
+                              : Icons.trending_down_rounded,
+                          size: 16,
+                          color: netCashFlowMinor >= 0
+                              ? cfo.income
+                              : cfo.expense,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,
@@ -1046,89 +1167,125 @@ class _InsightsKpiGrid extends StatelessWidget {
                         money: netFlowMoney,
                         showPlusSign: true,
                         masked: masked,
-                        semanticKind: netCashFlowMinor >= 0
-                            ? 'income'
-                            : 'expense',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
+                          color: netCashFlowMinor >= 0
+                              ? cfo.income
+                              : cfo.expense,
+                          fontWeight: FontWeight.w900,
                         ),
                       ),
+                    ),
+                    const SizedBox(height: 8),
+                    VisualFlowRatioBar(
+                      primaryMinor: incomeMinor,
+                      secondaryMinor: spendMinor,
+                      primaryColor: cfo.income,
+                      secondaryColor: cfo.expense,
+                      height: 5.0,
+                      masked: masked,
                     ),
                   ],
                 ),
               ),
             ),
+
+            // Tile 3: Avg Spend / Day + Live Velocity Sparkline
             SizedBox(
               width: w,
-              child: PressScaleCard(
-                padding: const EdgeInsets.all(AppSpacing.md),
+              child: WatermarkBentoCard(
+                accent: cfo.warning,
+                watermarkIcon: Icons.local_fire_department_rounded,
+                padding: const EdgeInsets.all(14),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Row(
                       children: [
-                        IconSquircle(
-                          icon: Icons.local_fire_department_outlined,
-                          iconColor: cfo.warning,
-                          backgroundColor: cfo.warningContainer,
-                          size: 32,
-                        ),
-                        const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             'Avg Spend / Day',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.labelMedium
-                                ?.copyWith(color: cfo.subtleText),
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: cfo.subtleText,
+                                  fontWeight: FontWeight.w700,
+                                ),
                           ),
+                        ),
+                        Icon(
+                          Icons.local_fire_department_rounded,
+                          size: 15,
+                          color: cfo.warning,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: MoneyText(
-                        money: avgDailyMoney,
-                        masked: masked,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
+                    const SizedBox(height: 6),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: MoneyText(
+                              money: avgDailyMoney,
+                              masked: masked,
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(fontWeight: FontWeight.w900),
+                            ),
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 6),
+                        MiniSparklineChart(
+                          values: spendSparkline,
+                          color: cfo.warning,
+                          width: 44,
+                          height: 22,
+                          strokeWidth: 2.0,
+                          masked: masked,
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
             ),
+
+            // Tile 4: Liquid Assets + Reserve Runway Bar
             SizedBox(
               width: w,
-              child: PressScaleCard(
-                padding: const EdgeInsets.all(AppSpacing.md),
+              child: WatermarkBentoCard(
+                accent: scheme.secondary,
+                watermarkIcon: Icons.account_balance_rounded,
+                padding: const EdgeInsets.all(14),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Row(
                       children: [
-                        IconSquircle(
-                          icon: Icons.account_balance_rounded,
-                          iconColor: scheme.primary,
-                          backgroundColor: scheme.primaryContainer,
-                          size: 32,
-                        ),
-                        const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             'Liquid Assets',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.labelMedium
-                                ?.copyWith(color: cfo.subtleText),
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: cfo.subtleText,
+                                  fontWeight: FontWeight.w700,
+                                ),
                           ),
+                        ),
+                        Icon(
+                          Icons.account_balance_rounded,
+                          size: 15,
+                          color: scheme.secondary,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,
@@ -1136,9 +1293,15 @@ class _InsightsKpiGrid extends StatelessWidget {
                         money: totalAssets,
                         masked: masked,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w900,
                         ),
                       ),
+                    ),
+                    const SizedBox(height: 8),
+                    AnimatedProgressBar(
+                      value: masked ? 0.0 : runwayRatio,
+                      color: scheme.secondary,
+                      height: 5.0,
                     ),
                   ],
                 ),
@@ -1383,6 +1546,21 @@ class _SmartCfoInsightsCard extends StatelessWidget {
               ],
             ),
           ],
+          const SizedBox(height: 12),
+          Divider(height: 1, color: cfo.divider),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.tonalIcon(
+                  key: const Key('insights_open_coach_btn'),
+                  onPressed: () => context.push('/coach'),
+                  icon: const Icon(Icons.auto_awesome_rounded, size: 17),
+                  label: const Text('Open Smart CFO Coach & Budget Plan'),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );

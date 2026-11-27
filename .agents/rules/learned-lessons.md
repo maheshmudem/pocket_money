@@ -40,16 +40,25 @@ Distilled root causes and permanent rules captured from real builds, tests, and 
    - *Rule*: Keep the subtitle clean (`accountType.label`) and place the percentage in a dedicated right-aligned tabular readout beside the progress bar.
 7. **Zero Raw Stock `AlertDialog` Popups**:
    - *Trap*: Default Material `AlertDialog` boxes clash harshly with modern elevated Neo-Fintech screens.
-   - *Rule*: Always launch popups with `showModernDialog` + `ModernDialogShell` or `showModernConfirmDialog` (frosted backdrop, `3px` semantic trim, icon squircle header, live preview where helpful, keyboard-safe scroll, rounded footer actions).
+   - *Rule*: Always launch popups with `showModernDialog` + `ModernDialogShell` or `showModernConfirmDialog` (frosted backdrop, uniform `1px` hairline border + ambient glow, icon squircle header, live preview where helpful, keyboard-safe scroll, rounded footer actions).
 8. **Cohesive Light & Dark Hero Surfaces**:
    - *Trap*: Giant dark full-bleed purple gradient cards look dated/heavy on Daylight Light screens and eat above-the-fold height.
-   - *Rule*: Use compact theme-native `FintechAccentCard` surfaces (`surfaceElevated`, `3px` top gradient trim, subtle ambient radial glow, hairline-divided `FintechFlatActionBar`) across all main tabs.
+   - *Rule*: Use compact theme-native `FintechAccentCard` surfaces (`surfaceElevated`, uniform `1px` hairline border, subtle ambient radial glow, hairline-divided `FintechFlatActionBar`) across all main tabs.
+9. **No Top-Only Card/Dialog Trim Strips**:
+   - *Trap*: Top-only 3px gradient trims on cards/dialogs/banners look unbalanced (user feedback 2026-11-25).
+   - *Rule*: Never add top-only border strips; use uniform 1px hairline border + soft ambient glow + semantic IconSquircle.
 9. **Zero Stock `DropdownButtonFormField` Menus & Nullable Popover Results**:
    - *Trap*: Stock Material `DropdownButtonFormField` bleeds edge-to-edge across the viewport, covers the active field, lacks search/icons, and returning `T?` directly from a `PopupRoute` confuses selecting a `null` option with barrier dismissal.
    - *Rule*: Always use `FintechDropdownField<T>` ([modern_dropdown.dart](file:///c:/Users/1070/Desktop/Appversion/pocket_money/lib/shared/widgets/modern_dropdown.dart)) with clean uniform `1px` popover borders (no stray top accent stripe), exact-width / right-edge viewport-aware above-or-below placement (`spaceBelow >= idealHeight || spaceBelow >= spaceAbove`), and a private `_DropdownSelection<T>` wrapper for nullable selections.
 10. **Zero Hardcoded Raw `TextField`s & Top-Border Floating-Label Notches**:
    - *Trap*: Scattering raw `TextField` / `TextFormField` with Material `OutlineInputBorder` causes labels to slice awkwardly across the top border and duplicates obscure/clear/search boilerplate across screens.
    - *Rule*: Always use `FintechTextField`, `FintechTextFormField`, or `FintechSearchField` ([modern_inputs.dart](file:///c:/Users/1070/Desktop/Appversion/pocket_money/lib/shared/widgets/modern_inputs.dart)), which wrap an internal borderless `TextField` (`border: InputBorder.none`, `floatingLabelBehavior: FloatingLabelBehavior.always`) inside a uniform rounded container so labels sit cleanly inside without any top-border notch while keeping `find.widgetWithText(TextField, label)` tests compatible.
+11. **`tester.binding.setSurfaceSize` vs `MediaQuery.sizeOf` Breakpoint Drift**:
+   - *Trap*: In widget tests, `tester.binding.setSurfaceSize(const Size(360, 800))` updates `LayoutBuilder` constraints (`constraints.maxWidth == 360`), while `MediaQuery.sizeOf(context).width` can still report `800`, causing floating overlays (like `DraggableQuickBall`) to compute desktop clearance on compact test viewports.
+   - *Rule*: Drive responsive layout and overlay clearances from `LayoutBuilder` constraints or explicit props passed from `AppShell` (and avoid `extendBody: true` when content would peek beneath floating bottom docks).
+12. **90 / 8 / 2 Luxury Finance Color Discipline**:
+   - *Trap*: Full-bleed dark AppBars, saturated purple/cobalt gradient controls, and rainbow-washed pastel card backgrounds make finance apps feel visually heavy and cluttered.
+   - *Rule*: Keep ~90% of the canvas calm neutral Porcelain Alabaster / Pure White (Light) or Deep Carbon / Satin Graphite (Dark), reserve brushed Black-Titanium strictly for flagship vault/card/chronograph surfaces, use monochrome Satin Obsidian (Light) / Platinum (Dark) for primary pills & CTAs, and apply semantic colors (Emerald, Rose, Sapphire, Gold) surgically for financial data and subtle icon emblems.
 
 ---
 
@@ -68,3 +77,6 @@ Distilled root causes and permanent rules captured from real builds, tests, and 
 13. **Android 5+ Monochrome Status-Bar Notification Icon**:
     - *Trap*: Passing an opaque `@mipmap/ic_launcher` to `AndroidInitializationSettings` renders as a solid white square in the Android status bar because Android masks small notification icons using only the alpha channel.
     - *Rule*: Always create a transparent monochrome white vector drawable (`res/drawable/ic_stat_*.xml`) and pair it with a semantic accent `color:` on `AndroidNotificationDetails`.
+14. **Debug-Mode `FLAG_SECURE` Blanks Mirroring & Captures**:
+    - *Trap*: `FLAG_SECURE` ("Block Screenshots") makes the Android Studio embedded emulator, `scrcpy`, screen recordings, and `adb screencap` show a blank/black screen during `flutter run`, which looks like an app hang even though the app renders fine.
+    - *Rule*: `MainActivity` skips `FLAG_SECURE` in debuggable builds (`ApplicationInfo.FLAG_DEBUGGABLE`), while release builds enforce it. Debug-build QA no longer needs to toggle Block Screenshots, but release-build QA still does.

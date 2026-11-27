@@ -17,8 +17,10 @@ import 'core/utilities/id_generator.dart';
 import 'core/utilities/profile_scope_controller.dart';
 import 'features/accounts/data/repositories/drift_account_repository.dart';
 import 'features/accounts/domain/repositories/account_repository.dart';
+import 'features/ai_coach/data/cfo_advisor_service.dart';
 import 'features/authentication/data/repositories/auth_repository.dart';
 import 'features/backup_restore/data/backup_restore_service.dart';
+import 'features/budgets/data/ca_budget_planner_service.dart';
 import 'features/budgets/data/repositories/drift_budget_repository.dart';
 import 'features/budgets/domain/repositories/budget_repository.dart';
 import 'features/categories/data/repositories/drift_category_repository.dart';
@@ -26,7 +28,11 @@ import 'features/categories/domain/repositories/category_repository.dart';
 import 'features/dashboard/data/repositories/drift_analytics_repository.dart';
 import 'features/dashboard/domain/repositories/analytics_repository.dart';
 import 'features/import_export/data/repositories/drift_csv_import_repository.dart';
+import 'features/life_planner/data/life_stage_planner_service.dart';
 import 'features/loans/data/repositories/drift_loan_repository.dart';
+import 'features/monthly_tracker/data/monthly_tracker_service.dart';
+import 'features/monthly_tracker/data/repositories/drift_bucket_list_repository.dart';
+import 'features/monthly_tracker/domain/repositories/bucket_list_repository.dart';
 import 'features/notifications/data/financial_alerts_coordinator.dart';
 import 'features/profiles/data/repositories/drift_profile_repository.dart';
 import 'features/profiles/domain/repositories/profile_repository.dart';
@@ -179,6 +185,55 @@ Future<void> configureDependencies({
     clock: clock,
     appVersion: env.appVersion,
   );
+  final cfoAdvisorService = CfoAdvisorService(
+    transactionRepository: txRepo,
+    budgetRepository: budgetRepo,
+    accountRepository: accountRepo,
+    clock: clock,
+  );
+  final caBudgetPlannerService = CaBudgetPlannerService(
+    budgetRepository: budgetRepo,
+    accountRepository: accountRepo,
+    categoryRepository: categoryRepo,
+    transactionRepository: txRepo,
+    recurringRepository: recurringRepo,
+    loanRepository: loanRepo,
+    savingsGoalRepository: goalRepo,
+    settingsRepository: settingsRepo,
+    clock: clock,
+  );
+  final lifeStagePlannerService = LifeStagePlannerService(
+    accountRepository: accountRepo,
+    categoryRepository: categoryRepo,
+    transactionRepository: txRepo,
+    recurringRepository: recurringRepo,
+    loanRepository: loanRepo,
+    savingsGoalRepository: goalRepo,
+    caBudgetPlannerService: caBudgetPlannerService,
+    settingsRepository: settingsRepo,
+    clock: clock,
+  );
+  final bucketListRepo = DriftBucketListRepository(
+    db: db,
+    idGenerator: idGen,
+    clock: clock,
+  );
+  final monthlyTrackerService = MonthlyTrackerService(
+    transactionRepository: txRepo,
+    categoryRepository: categoryRepo,
+    accountRepository: accountRepo,
+    budgetRepository: budgetRepo,
+    caBudgetPlannerService: caBudgetPlannerService,
+    savingsGoalRepository: goalRepo,
+    recurringRepository: recurringRepo,
+    loanRepository: loanRepo,
+    bucketListRepository: bucketListRepo,
+    lifeStagePlannerService: lifeStagePlannerService,
+    alertsCoordinator: alertsCoordinator,
+    notificationDispatcher: notificationDispatcher,
+    settingsRepository: settingsRepo,
+    clock: clock,
+  );
 
   getIt
     ..registerSingleton<EnvironmentConfig>(env)
@@ -212,7 +267,12 @@ Future<void> configureDependencies({
     ..registerSingleton<DriftLoanRepository>(loanRepo)
     ..registerSingleton<DriftCsvImportRepository>(csvRepo)
     ..registerSingleton<SyncCoordinator>(syncCoordinator)
-    ..registerSingleton<BackupRestoreService>(backupService);
+    ..registerSingleton<BackupRestoreService>(backupService)
+    ..registerSingleton<CfoAdvisorService>(cfoAdvisorService)
+    ..registerSingleton<CaBudgetPlannerService>(caBudgetPlannerService)
+    ..registerSingleton<LifeStagePlannerService>(lifeStagePlannerService)
+    ..registerSingleton<BucketListRepository>(bucketListRepo)
+    ..registerSingleton<MonthlyTrackerService>(monthlyTrackerService);
 
   logger.info(
     'bootstrap',

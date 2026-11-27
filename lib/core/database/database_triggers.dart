@@ -14,6 +14,7 @@ abstract final class DatabaseIntegritySql {
     'CREATE INDEX IF NOT EXISTS idx_import_fingerprint ON imported_transactions(profile_id, fingerprint);',
     'CREATE INDEX IF NOT EXISTS idx_audit_profile_date ON audit_logs(profile_id, created_at_utc DESC);',
     'CREATE INDEX IF NOT EXISTS idx_notif_profile_unread ON local_notifications(profile_id, is_read, created_at_utc DESC);',
+    'CREATE INDEX IF NOT EXISTS idx_bucket_profile_month ON bucket_list_items(profile_id, target_year_month, status);',
   ];
 
   /// Enforces accounting invariants directly inside SQLite so neither UI nor

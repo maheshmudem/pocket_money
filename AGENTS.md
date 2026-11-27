@@ -16,9 +16,9 @@ This repository enforces a **Production-Grade Engineering, Clean Architecture, M
 
 ## 2. Modern UI/UX & Accessibility Discipline
 
-- **Theme-Native Light & Dark Parity**: Every screen, card, chart, badge, modal, and empty state must look cohesive and high-contrast (WCAG AA+) in both Daylight Light and Obsidian Dark themes. Prefer elevated theme-native surfaces with a `3px` accent trim over heavy hardcoded gradient slabs.
+- **Theme-Native Light & Dark Parity**: Every screen, card, chart, badge, modal, and empty state must look cohesive and high-contrast (WCAG AA+) in both Daylight Light and Obsidian Dark themes. Prefer elevated theme-native surfaces with a uniform `1px` hairline border and soft ambient glow over heavy hardcoded gradient slabs or top-only border strips.
 - **Zero-Waste Compact Layouts**: Prioritize scannable hierarchy, crisp `1px` hairline dividers, tabular figures (`FontFeature.tabularFigures()`) for all numbers/currencies/percentages, and generous above-the-fold utility.
-- **Zero Legacy Popups**: Never use raw stock `AlertDialog` boxes for user-facing flows. Always use the reusable animated custom dialog shell (`showModernDialog`, `ModernDialogShell`, `showModernConfirmDialog`) with header icon squircle, semantic top trim, frosted backdrop, keyboard-safe scrolling, and balanced rounded actions.
+- **Zero Legacy Popups**: Never use raw stock `AlertDialog` boxes for user-facing flows. Always use the reusable animated custom dialog shell (`showModernDialog`, `ModernDialogShell`, `showModernConfirmDialog`) with header icon squircle, uniform `1px` hairline border + soft ambient glow, frosted backdrop, keyboard-safe scrolling, and balanced rounded actions.
 - **Overflow & Truncation Proofing**:
   - Wrap dynamic `Row` / `PopupMenuItem` labels in `Flexible` / `Expanded` (`maxLines: 1`, `TextOverflow.ellipsis`).
   - Wrap right-aligned monetary values in `ConstrainedBox` + `FittedBox(fit: BoxFit.scaleDown)`.

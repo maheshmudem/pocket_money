@@ -57,6 +57,16 @@ abstract interface class DeviceNotificationDispatcher {
     required int minute,
   });
 
+  Future<void> scheduleOneShotReminder({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime atUtc,
+    String? payloadRoute,
+  });
+
+  Future<void> cancelScheduledReminder(int id);
+
   Future<void> cancelAll();
 }
 
@@ -307,6 +317,61 @@ final class FlutterLocalNotificationDispatcher
   }
 
   @override
+  Future<void> scheduleOneShotReminder({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime atUtc,
+    String? payloadRoute,
+  }) async {
+    if (kIsWeb) return;
+    if (!atUtc.isAfter(DateTime.now().toUtc())) return;
+    if (!_initialized) {
+      await initialize(onTap: (_) {});
+    }
+    try {
+      _ensureTimeZone();
+      final scheduled = tz.TZDateTime.from(atUtc.toUtc(), tz.UTC);
+      const details = NotificationDetails(
+        android: AndroidNotificationDetails(
+          NotificationChannels.reminders,
+          'Daily Expense Reminders',
+          icon: 'ic_stat_pocket_cfo',
+          color: Color(0xFF4F46E5),
+          channelDescription:
+              'Optional daily check-in reminder to log expenses.',
+          importance: Importance.defaultImportance,
+          priority: Priority.defaultPriority,
+        ),
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        ),
+      );
+      await _plugin.zonedSchedule(
+        id: id,
+        title: title,
+        body: body,
+        scheduledDate: scheduled,
+        notificationDetails: details,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        payload: payloadRoute,
+      );
+    } catch (_) {
+      // Ignore scheduling failures on unsupported hosts.
+    }
+  }
+
+  @override
+  Future<void> cancelScheduledReminder(int id) async {
+    if (kIsWeb) return;
+    try {
+      await _plugin.cancel(id: id);
+    } catch (_) {}
+  }
+
+  @override
   Future<void> cancelAll() async {
     if (kIsWeb) return;
     try {
@@ -319,6 +384,7 @@ final class FlutterLocalNotificationDispatcher
 final class InMemoryNotificationDispatcher
     implements DeviceNotificationDispatcher {
   final List<DispatchedNotificationRecord> dispatched = [];
+  final Map<int, String> scheduledReminders = {};
   bool dailyReminderScheduled = false;
   int? dailyReminderHour;
   int? dailyReminderMinute;
@@ -368,8 +434,25 @@ final class InMemoryNotificationDispatcher
   }
 
   @override
+  Future<void> scheduleOneShotReminder({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime atUtc,
+    String? payloadRoute,
+  }) async {
+    scheduledReminders[id] = title;
+  }
+
+  @override
+  Future<void> cancelScheduledReminder(int id) async {
+    scheduledReminders.remove(id);
+  }
+
+  @override
   Future<void> cancelAll() async {
     dispatched.clear();
+    scheduledReminders.clear();
     dailyReminderScheduled = false;
   }
 }

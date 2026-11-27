@@ -20,13 +20,12 @@ final class DriftCategoryRepository implements CategoryRepository {
   final IdGenerator _idGen;
   final UtcClock _clock;
 
-  @override
-  Stream<List<CategoryEntity>> watchCategories(
+  SimpleSelectStatement<$CategoriesTable, Category> _categoriesSelect(
     ProfileId profileId, {
     CategoryType? type,
     bool includeInactive = false,
   }) {
-    final q = _db.select(_db.categories)
+    return _db.select(_db.categories)
       ..where((c) {
         Expression<bool> cond = c.profileId.equals(profileId.value);
         if (type != null) {
@@ -41,8 +40,19 @@ final class DriftCategoryRepository implements CategoryRepository {
         (c) => OrderingTerm.asc(c.categoryType),
         (c) => OrderingTerm.asc(c.name),
       ]);
+  }
 
-    return q.watch().map((rows) => rows.map(_map).toList());
+  @override
+  Stream<List<CategoryEntity>> watchCategories(
+    ProfileId profileId, {
+    CategoryType? type,
+    bool includeInactive = false,
+  }) {
+    return _categoriesSelect(
+      profileId,
+      type: type,
+      includeInactive: includeInactive,
+    ).watch().map((rows) => rows.map(_map).toList());
   }
 
   @override
@@ -52,12 +62,12 @@ final class DriftCategoryRepository implements CategoryRepository {
     bool includeInactive = false,
   }) async {
     try {
-      final rows = await watchCategories(
+      final rows = await _categoriesSelect(
         profileId,
         type: type,
         includeInactive: includeInactive,
-      ).first;
-      return Success(rows);
+      ).get();
+      return Success(rows.map(_map).toList());
     } catch (_) {
       return const FailureResult(DatabaseFailure());
     }

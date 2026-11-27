@@ -1,33 +1,59 @@
+import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 
 import 'app_tokens.dart';
+
+abstract final class AppTypography {
+  static const String sansFamily = 'PlusJakartaSans';
+  static const String editorialFamily = 'PlusJakartaSans';
+
+  /// Crisp modern fintech display style for page titles, vault names & section headers.
+  static TextStyle editorial(
+    BuildContext context, {
+    double? fontSize,
+    Color? color,
+    FontWeight fontWeight = FontWeight.w800,
+    double letterSpacing = -0.65,
+    double? height,
+  }) {
+    return (Theme.of(context).textTheme.titleLarge ?? const TextStyle())
+        .copyWith(
+          fontFamily: sansFamily,
+          fontSize: fontSize,
+          color: color,
+          fontWeight: fontWeight,
+          letterSpacing: letterSpacing,
+          height: height,
+        );
+  }
+}
 
 abstract final class AppTheme {
   static ThemeData light() {
     const scheme = ColorScheme(
       brightness: Brightness.light,
-      primary: Color(0xFF4338CA),
+      primary: Color(0xFF1D4ED8),
       onPrimary: Color(0xFFFFFFFF),
-      primaryContainer: Color(0xFFEEF2FF),
-      onPrimaryContainer: Color(0xFF1E1B4B),
-      secondary: Color(0xFF047857),
+      primaryContainer: Color(0xFFEDF2FF),
+      onPrimaryContainer: Color(0xFF0F2557),
+      secondary: Color(0xFF334155),
       onSecondary: Color(0xFFFFFFFF),
-      secondaryContainer: Color(0xFFD1FAE5),
-      onSecondaryContainer: Color(0xFF064E3B),
-      tertiary: Color(0xFF0284C7),
+      secondaryContainer: Color(0xFFEEF1F6),
+      onSecondaryContainer: Color(0xFF0F172A),
+      tertiary: Color(0xFF059669),
       onTertiary: Color(0xFFFFFFFF),
-      tertiaryContainer: Color(0xFFE0F2FE),
-      onTertiaryContainer: Color(0xFF0C4A6E),
-      error: Color(0xFFC81E3A),
+      tertiaryContainer: Color(0xFFE6F7F0),
+      onTertiaryContainer: Color(0xFF064E3B),
+      error: Color(0xFFDC2626),
       onError: Color(0xFFFFFFFF),
-      errorContainer: Color(0xFFFFE4E6),
-      onErrorContainer: Color(0xFF881337),
-      surface: Color(0xFFF6F8FC),
-      onSurface: Color(0xFF0F172A),
-      surfaceContainerHighest: Color(0xFFE2E8F0),
-      onSurfaceVariant: Color(0xFF475569),
-      outline: Color(0xFFCBD5E1),
-      outlineVariant: Color(0xFFE2E8F0),
+      errorContainer: Color(0xFFFEECEF),
+      onErrorContainer: Color(0xFF7F1D1D),
+      surface: Color(0xFFF5F6FA),
+      onSurface: Color(0xFF0F1420),
+      surfaceContainerHighest: Color(0xFFEBEEF5),
+      onSurfaceVariant: Color(0xFF5E677D),
+      outline: Color(0xFFCBD2E1),
+      outlineVariant: Color(0xFFE6E9F0),
     );
     return _buildTheme(scheme, PocketCfoColors.light);
   }
@@ -35,28 +61,28 @@ abstract final class AppTheme {
   static ThemeData dark() {
     const scheme = ColorScheme(
       brightness: Brightness.dark,
-      primary: Color(0xFF818CF8),
-      onPrimary: Color(0xFF0F0D2E),
-      primaryContainer: Color(0xFF1E1B4B),
-      onPrimaryContainer: Color(0xFFE0E7FF),
-      secondary: Color(0xFF34D399),
-      onSecondary: Color(0xFF022C22),
-      secondaryContainer: Color(0xFF064E3B),
-      onSecondaryContainer: Color(0xFFD1FAE5),
-      tertiary: Color(0xFF38BDF8),
-      onTertiary: Color(0xFF082F49),
-      tertiaryContainer: Color(0xFF0C4A6E),
-      onTertiaryContainer: Color(0xFFE0F2FE),
-      error: Color(0xFFFB7185),
-      onError: Color(0xFF4C0519),
-      errorContainer: Color(0xFF4C0519),
-      onErrorContainer: Color(0xFFFFE4E6),
-      surface: Color(0xFF090D16),
-      onSurface: Color(0xFFF8FAFC),
-      surfaceContainerHighest: Color(0xFF1E293B),
-      onSurfaceVariant: Color(0xFF94A3B8),
-      outline: Color(0xFF334155),
-      outlineVariant: Color(0xFF1F2937),
+      primary: Color(0xFF60A5FA),
+      onPrimary: Color(0xFF08142B),
+      primaryContainer: Color(0xFF172238),
+      onPrimaryContainer: Color(0xFFDBEAFE),
+      secondary: Color(0xFF94A3B8),
+      onSecondary: Color(0xFF0F1420),
+      secondaryContainer: Color(0xFF1D2230),
+      onSecondaryContainer: Color(0xFFE2E8F0),
+      tertiary: Color(0xFF34D399),
+      onTertiary: Color(0xFF03261C),
+      tertiaryContainer: Color(0xFF0B2920),
+      onTertiaryContainer: Color(0xFFD1FAE5),
+      error: Color(0xFFF87171),
+      onError: Color(0xFF450A0A),
+      errorContainer: Color(0xFF331419),
+      onErrorContainer: Color(0xFFFEE2E2),
+      surface: Color(0xFF08090D),
+      onSurface: Color(0xFFF4F6FA),
+      surfaceContainerHighest: Color(0xFF191C26),
+      onSurfaceVariant: Color(0xFF8E97AB),
+      outline: Color(0xFF303647),
+      outlineVariant: Color(0xFF232735),
     );
     return _buildTheme(scheme, PocketCfoColors.dark);
   }
@@ -66,35 +92,49 @@ abstract final class AppTheme {
         ? Typography.material2021().white
         : Typography.material2021().black;
     final baseText = typo.apply(
+      fontFamily: AppTypography.sansFamily,
       bodyColor: scheme.onSurface,
       displayColor: scheme.onSurface,
     );
 
     return ThemeData(
       useMaterial3: true,
+      fontFamily: AppTypography.sansFamily,
       colorScheme: scheme,
       scaffoldBackgroundColor: scheme.surface,
       extensions: [cfoColors],
       textTheme: baseText.copyWith(
         displaySmall: baseText.displaySmall?.copyWith(
+          fontFamily: AppTypography.sansFamily,
           fontWeight: FontWeight.w800,
-          letterSpacing: -0.8,
+          letterSpacing: -1.1,
           fontFeatures: const [FontFeature.tabularFigures()],
         ),
         headlineMedium: baseText.headlineMedium?.copyWith(
+          fontFamily: AppTypography.sansFamily,
           fontWeight: FontWeight.w800,
-          letterSpacing: -0.5,
+          letterSpacing: -0.7,
           fontFeatures: const [FontFeature.tabularFigures()],
         ),
         titleLarge: baseText.titleLarge?.copyWith(
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.3,
+          fontFamily: AppTypography.sansFamily,
+          fontWeight: FontWeight.w800,
+          letterSpacing: -0.6,
         ),
         titleMedium: baseText.titleMedium?.copyWith(
-          fontWeight: FontWeight.w600,
+          fontFamily: AppTypography.sansFamily,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.25,
+        ),
+        titleSmall: baseText.titleSmall?.copyWith(
+          fontFamily: AppTypography.sansFamily,
+          fontWeight: FontWeight.w700,
           letterSpacing: -0.15,
         ),
-        labelLarge: baseText.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+        labelLarge: baseText.labelLarge?.copyWith(
+          fontFamily: AppTypography.sansFamily,
+          fontWeight: FontWeight.w600,
+        ),
         bodyLarge: baseText.bodyLarge?.copyWith(height: 1.45),
         bodyMedium: baseText.bodyMedium?.copyWith(height: 1.45),
       ),
@@ -106,9 +146,10 @@ abstract final class AppTheme {
         scrolledUnderElevation: 0,
         centerTitle: false,
         titleTextStyle: baseText.titleLarge?.copyWith(
+          fontFamily: AppTypography.sansFamily,
           color: scheme.onSurface,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.3,
+          fontWeight: FontWeight.w800,
+          letterSpacing: -0.5,
         ),
       ),
       cardTheme: CardThemeData(
@@ -249,6 +290,58 @@ abstract final class AppTheme {
         backgroundColor: cfoColors.surfaceElevated,
         indicatorColor: scheme.primaryContainer,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+      ),
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: _ClassicPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.windows: _ClassicPageTransitionsBuilder(),
+          TargetPlatform.linux: _ClassicPageTransitionsBuilder(),
+        },
+      ),
+    );
+  }
+}
+
+class _ClassicPageTransitionsBuilder extends PageTransitionsBuilder {
+  const _ClassicPageTransitionsBuilder();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    if (MediaQuery.disableAnimationsOf(context)) return child;
+    final enterCurve = CurvedAnimation(
+      parent: animation,
+      curve: AppMotion.curveEmphasized,
+      reverseCurve: AppMotion.curveExit,
+    );
+    final exitCurve = CurvedAnimation(
+      parent: secondaryAnimation,
+      curve: AppMotion.curveEmphasized,
+    );
+    return SlideTransition(
+      position: Tween<Offset>(
+        begin: Offset.zero,
+        end: const Offset(-0.025, 0),
+      ).animate(exitCurve),
+      child: ScaleTransition(
+        scale: Tween<double>(begin: 1.0, end: 0.985).animate(exitCurve),
+        child: FadeTransition(
+          opacity: enterCurve,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0.05, 0),
+              end: Offset.zero,
+            ).animate(enterCurve),
+            child: child,
+          ),
+        ),
       ),
     );
   }

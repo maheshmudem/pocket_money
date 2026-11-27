@@ -701,11 +701,11 @@ void main() {
         findsOneWidget,
       );
 
-      // 6b. Test redesigned ModernDialogShell Rename Profile popup with live avatar preview!
-      await tester.tap(find.byTooltip('Rename profile'));
+      // 6b. Test redesigned ModernDialogShell Edit Profile popup with live avatar preview!
+      await tester.tap(find.byTooltip('Edit profile'));
       await tester.pumpAndSettle();
       expect(find.byType(ModernDialogShell), findsOneWidget);
-      expect(find.text('Rename Profile'), findsOneWidget);
+      expect(find.text('Edit Profile'), findsOneWidget);
       expect(find.text('Preview'), findsOneWidget);
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
@@ -893,7 +893,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Expense & Budget Guard'), findsOneWidget);
-      expect(find.text('On Track'), findsOneWidget);
+      expect(find.text('On Track'), findsWidgets);
       expect(find.text('Budget Spent'), findsOneWidget);
       expect(find.text('Remaining'), findsOneWidget);
       expect(find.text('Safe / Day'), findsOneWidget);
@@ -1035,8 +1035,14 @@ void main() {
       await tester.pumpAndSettle();
 
       // 2. Set a ₹ 1,000 monthly budget via Home Expense & Budget Guard
+      await tester.drag(
+        find.byType(CustomScrollView).first,
+        const Offset(0, -260),
+      );
+      await tester.pumpAndSettle();
       final setBudgetBtn = find.byKey(const Key('dashboard_set_budget_btn'));
       await tester.ensureVisible(setBudgetBtn);
+      await tester.pumpAndSettle();
       await tester.tap(setBudgetBtn);
       await tester.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 60)),

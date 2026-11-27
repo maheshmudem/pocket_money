@@ -14,6 +14,8 @@ import '../../../../shared/widgets/modern_dropdown.dart';
 import '../../../../shared/widgets/modern_inputs.dart';
 import '../../../../shared/widgets/profile_avatar.dart';
 import '../../../authentication/presentation/bloc/auth_cubit.dart';
+import '../../../dashboard/presentation/bloc/dashboard_bloc.dart';
+import '../../../transactions/presentation/bloc/transactions_bloc.dart';
 import '../../domain/entities/profile_entity.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../bloc/active_profile_cubit.dart';
@@ -29,6 +31,23 @@ Future<void> openCreateProfileModal(
       presetType: presetType,
       suggestedName: suggestedName,
       parentContext: context,
+    ),
+  );
+}
+
+/// Reusable animated dialog for editing an existing financial profile's name,
+/// type, base currency, timezone, and editor posting permissions (`SCR-PRO-002`).
+Future<void> openEditProfileModal(
+  BuildContext context,
+  FinancialProfile profile, {
+  VoidCallback? onUpdated,
+}) async {
+  await showModernDialog<void>(
+    context: context,
+    builder: (_) => _EditProfileDialog(
+      profile: profile,
+      parentContext: context,
+      onUpdated: onUpdated,
     ),
   );
 }
@@ -379,8 +398,16 @@ class ProfilesPage extends StatelessWidget {
                                             ),
                                           ),
                                           PopupMenuButton<String>(
+                                            key: Key(
+                                              'profile_menu_${profile.id.value}',
+                                            ),
                                             onSelected: (action) {
-                                              if (action == 'switch') {
+                                              if (action == 'edit') {
+                                                openEditProfileModal(
+                                                  context,
+                                                  profile,
+                                                );
+                                              } else if (action == 'switch') {
                                                 context
                                                     .read<ActiveProfileCubit>()
                                                     .switchProfile(profile.id);
@@ -394,9 +421,21 @@ class ProfilesPage extends StatelessWidget {
                                                   context,
                                                   profile,
                                                 );
+                                              } else if (action == 'archive') {
+                                                _confirmArchiveProfile(
+                                                  context,
+                                                  profile,
+                                                );
                                               }
                                             },
                                             itemBuilder: (_) => [
+                                              if (profile
+                                                  .permissions
+                                                  .canChangeSettingsOrCurrency)
+                                                const PopupMenuItem(
+                                                  value: 'edit',
+                                                  child: Text('Edit profile'),
+                                                ),
                                               const PopupMenuItem(
                                                 value: 'switch',
                                                 child: Text(
@@ -414,6 +453,16 @@ class ProfilesPage extends StatelessWidget {
                                                   value: 'currency',
                                                   child: Text(
                                                     'Change base currency',
+                                                  ),
+                                                ),
+                                              if (profile
+                                                      .permissions
+                                                      .canTransferOwnershipOrArchive &&
+                                                  state.profiles.length > 1)
+                                                const PopupMenuItem(
+                                                  value: 'archive',
+                                                  child: Text(
+                                                    'Archive profile',
                                                   ),
                                                 ),
                                             ],
@@ -516,6 +565,42 @@ class ProfilesPage extends StatelessWidget {
     BuildContext context,
     FinancialProfile profile,
   ) => openProfileMembersModal(context, profile);
+
+  Future<void> _confirmArchiveProfile(
+    BuildContext context,
+    FinancialProfile profile,
+  ) async {
+    final confirmed = await showModernConfirmDialog(
+      context: context,
+      title: 'Archive "${profile.name}"?',
+      subtitle: 'Hides this vault from active workspaces',
+      icon: Icons.archive_outlined,
+      accent: ModernDialogAccent.danger,
+      confirmLabel: 'Archive',
+      message:
+          'Its encrypted ledger entries remain intact in the database, and you can continue using your other active profiles.',
+    );
+    if (confirmed != true || !context.mounted) return;
+    final res = await context.read<ActiveProfileCubit>().archiveProfile(
+      profile.id,
+      queueSync:
+          !(context.read<AuthCubit>().state.user?.isLocalOnlyWorkspace ?? true),
+    );
+    if (!context.mounted) return;
+    if (res.isSuccess) {
+      showFintechToast(
+        context,
+        'Archived "${profile.name}".',
+        tone: FintechToastTone.info,
+      );
+    } else {
+      showFintechToast(
+        context,
+        res.failureOrNull?.message ?? 'Could not archive profile.',
+        tone: FintechToastTone.warning,
+      );
+    }
+  }
 }
 
 class _FamilyMembersSheetBody extends StatefulWidget {
@@ -870,6 +955,328 @@ class _CreateProfileDialogState extends State<_CreateProfileDialog> {
             searchHint: 'Search currency...',
             options: FintechDropdownOption.builtInCurrencies(),
             onChanged: (v) => setState(() => _selectedCurrency = v),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EditProfileDialog extends StatefulWidget {
+  const _EditProfileDialog({
+    required this.profile,
+    required this.parentContext,
+    this.onUpdated,
+  });
+
+  final FinancialProfile profile;
+  final BuildContext parentContext;
+  final VoidCallback? onUpdated;
+
+  @override
+  State<_EditProfileDialog> createState() => _EditProfileDialogState();
+}
+
+class _EditProfileDialogState extends State<_EditProfileDialog> {
+  static const _commonTimezones = [
+    (id: 'Asia/Kolkata', label: 'India Standard Time (Asia/Kolkata)'),
+    (id: 'UTC', label: 'Coordinated Universal Time (UTC)'),
+    (id: 'America/New_York', label: 'US Eastern (America/New_York)'),
+    (id: 'America/Los_Angeles', label: 'US Pacific (America/Los_Angeles)'),
+    (id: 'Europe/London', label: 'UK / GMT (Europe/London)'),
+    (id: 'Europe/Berlin', label: 'Central Europe (Europe/Berlin)'),
+    (id: 'Asia/Dubai', label: 'UAE Gulf (Asia/Dubai)'),
+    (id: 'Asia/Singapore', label: 'Singapore (Asia/Singapore)'),
+    (id: 'Asia/Tokyo', label: 'Japan (Asia/Tokyo)'),
+    (id: 'Australia/Sydney', label: 'Australia Eastern (Australia/Sydney)'),
+  ];
+
+  late final TextEditingController _nameCtrl;
+  late ProfileType _selectedType;
+  late String _selectedCurrency;
+  late String _selectedTimezone;
+  late bool _editorsCanPost;
+  bool _submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameCtrl = TextEditingController(text: widget.profile.name);
+    _selectedType = widget.profile.profileType;
+    _selectedCurrency = widget.profile.baseCurrencyCode;
+    _selectedTimezone = widget.profile.timezone;
+    _editorsCanPost = widget.profile.editorsCanPost;
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final name = _nameCtrl.text.trim();
+    if (name.isEmpty || _submitting) return;
+    setState(() => _submitting = true);
+    HapticFeedback.selectionClick();
+
+    final parent = widget.parentContext;
+    final cubit = parent.read<ActiveProfileCubit>();
+    final isLocalOnly =
+        parent.read<AuthCubit>().state.user?.isLocalOnlyWorkspace ?? true;
+
+    DashboardBloc? dashBloc;
+    TransactionsBloc? txBloc;
+    try {
+      dashBloc = parent.read<DashboardBloc>();
+    } catch (_) {}
+    try {
+      txBloc = parent.read<TransactionsBloc>();
+    } catch (_) {}
+
+    final nav = Navigator.of(context);
+    final dialogRoute = ModalRoute.of(context);
+    final res = await cubit.updateProfile(
+      profileId: widget.profile.id,
+      name: name,
+      profileType: _selectedType,
+      baseCurrencyCode: _selectedCurrency,
+      timezone: _selectedTimezone,
+      editorsCanPost: _editorsCanPost,
+      queueSync: !isLocalOnly,
+    );
+    if (!mounted) return;
+    if (res.isSuccess) {
+      dashBloc?.add(const DashboardRefreshRequested());
+      txBloc?.add(const TransactionsLoadRequested());
+      widget.onUpdated?.call();
+      if ((dialogRoute?.isCurrent ?? false) && nav.canPop()) {
+        nav.pop();
+      }
+      if (parent.mounted) {
+        showFintechToast(
+          parent,
+          'Updated profile "$name".',
+          tone: FintechToastTone.success,
+        );
+      }
+    } else {
+      setState(() => _submitting = false);
+      showFintechToast(
+        context,
+        res.failureOrNull?.message ?? 'Could not update profile.',
+        tone: FintechToastTone.danger,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cfo = context.cfoColors;
+    final scheme = Theme.of(context).colorScheme;
+    final previewName = _nameCtrl.text.trim().isEmpty
+        ? widget.profile.name
+        : _nameCtrl.text.trim();
+    final previewProfile = FinancialProfile(
+      id: widget.profile.id,
+      name: previewName,
+      profileType: _selectedType,
+      baseCurrencyCode: _selectedCurrency,
+      timezone: _selectedTimezone,
+      role: widget.profile.role,
+      editorsCanPost: _editorsCanPost,
+      createdAtUtc: widget.profile.createdAtUtc,
+      updatedAtUtc: widget.profile.updatedAtUtc,
+      version: widget.profile.version,
+      syncStatus: widget.profile.syncStatus,
+    );
+
+    final tzOptions = <FintechDropdownOption<String>>[
+      for (final tz in _commonTimezones)
+        FintechDropdownOption<String>(
+          value: tz.id,
+          label: tz.id,
+          subtitle: tz.label,
+        ),
+      if (!_commonTimezones.any((z) => z.id == _selectedTimezone))
+        FintechDropdownOption<String>(
+          value: _selectedTimezone,
+          label: _selectedTimezone,
+          subtitle: 'Current profile timezone',
+        ),
+    ];
+
+    final currencyChanged =
+        _selectedCurrency != widget.profile.baseCurrencyCode;
+
+    return ModernDialogShell(
+      title: 'Edit Profile',
+      subtitle: 'Update vault identity, category, currency & team rules',
+      icon: Icons.edit_rounded,
+      confirmLabel: 'Save Changes',
+      confirmKey: const Key('edit_profile_save_btn'),
+      isConfirmLoading: _submitting,
+      onConfirm: _nameCtrl.text.trim().isEmpty ? null : _submit,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: cfo.surfaceTonal,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              border: Border.all(color: cfo.divider.withValues(alpha: 0.7)),
+            ),
+            child: Row(
+              children: [
+                ProfileAvatar(
+                  profile: previewProfile,
+                  size: 38,
+                  showTypeBadge: true,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        previewName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      Text(
+                        '${_selectedType.label} • $_selectedCurrency',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.labelSmall?.copyWith(color: cfo.subtleText),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 6),
+                FintechStatusPill(
+                  label: 'Preview',
+                  foreground: scheme.primary,
+                  background: scheme.primaryContainer,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          FintechTextField(
+            key: const Key('edit_profile_name_field'),
+            label: 'Profile Name',
+            controller: _nameCtrl,
+            leadingIcon: Icons.badge_outlined,
+            textCapitalization: TextCapitalization.words,
+            showClearButton: true,
+            onChanged: (_) => setState(() {}),
+            onSubmitted: (_) => _submit(),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Profile Type',
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: cfo.subtleText,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: ProfileType.values.map((t) {
+              return ChoiceChip(
+                key: Key('edit_profile_type_${t.wireValue}'),
+                showCheckmark: false,
+                visualDensity: VisualDensity.compact,
+                label: Text(t.label),
+                selected: _selectedType == t,
+                onSelected: (_) {
+                  HapticFeedback.selectionClick();
+                  setState(() => _selectedType = t);
+                },
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 12),
+          FintechDropdownField<String>(
+            key: const Key('edit_profile_currency_dropdown'),
+            label: 'Base Currency',
+            value: _selectedCurrency,
+            leadingIcon: Icons.currency_exchange_rounded,
+            searchable: true,
+            searchHint: 'Search currency...',
+            options: FintechDropdownOption.builtInCurrencies(),
+            compact: true,
+            onChanged: (v) => setState(() => _selectedCurrency = v),
+          ),
+          if (currencyChanged) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: cfo.warningContainer.withValues(alpha: 0.45),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                border: Border.all(color: cfo.warning.withValues(alpha: 0.4)),
+              ),
+              child: Text(
+                'Historical transactions keep their original FX snapshots; reports use $_selectedCurrency going forward.',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: scheme.onSurface,
+                  height: 1.35,
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 10),
+          FintechDropdownField<String>(
+            key: const Key('edit_profile_timezone_dropdown'),
+            label: 'Timezone',
+            value: _selectedTimezone,
+            leadingIcon: Icons.schedule_rounded,
+            searchable: true,
+            searchHint: 'Search timezone...',
+            options: tzOptions,
+            compact: true,
+            onChanged: (v) => setState(() => _selectedTimezone = v),
+          ),
+          const SizedBox(height: 10),
+          Material(
+            color: cfo.surfaceTonal,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              side: BorderSide(color: cfo.divider),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: SwitchListTile.adaptive(
+              key: const Key('edit_profile_editors_can_post_switch'),
+              dense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 2,
+              ),
+              title: Text(
+                'Editors can post transactions',
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              subtitle: Text(
+                'Allow Editor members to post directly without approval',
+                style: Theme.of(
+                  context,
+                ).textTheme.labelSmall?.copyWith(color: cfo.subtleText),
+              ),
+              value: _editorsCanPost,
+              onChanged: (v) => setState(() => _editorsCanPost = v),
+            ),
           ),
         ],
       ),

@@ -8,7 +8,7 @@ Apply these UI/UX engineering principles across every screen, card, chart, botto
 
 - **Theme-Native Elevated Surfaces**:
   - Build hero cards and primary panels on semantic surface tokens (`surfaceElevated`, `surfaceTonal`, `divider`, `cardShadow`) rather than loud hardcoded full-bleed gradients that look jarring in Light Mode.
-  - Use a subtle **`3px` top brand/semantic gradient hairline trim** + soft top-right ambient radial sheen (`~5%` opacity in Light, `~15%` in Dark) for unmistakable visual polish across every primary tab.
+  - Use a uniform **`1px` hairline border** + soft top-right ambient radial sheen (`~5%` opacity in Light, `~15%` in Dark) + semantic `IconSquircle` across every primary tab (never top-only border strips).
 - **Strict Light & Dark Mode Parity**:
   - Verify contrast (WCAG AA minimum: `4.5:1` for body text, `3:1` for large text/icons) in both Daylight Light and Obsidian Dark themes.
   - Pair every semantic color (income/emerald, expense/crimson, warning/amber, transfer/blue) with an explicit directional icon or label — never rely on color alone.
@@ -21,13 +21,13 @@ Apply these UI/UX engineering principles across every screen, card, chart, botto
 
 Never hand-code one-off containers or dated stock popups. Centralize and reuse shared primitives:
 
-1. **Accent Hero Cards (`FintechAccentCard`)**: Elevated card with `3px` semantic trim, optional ambient glow, `1px` border, and optional hairline-divided `bottomBar`.
+1. **Accent Hero Cards (`FintechAccentCard`)**: Elevated card with optional ambient glow, uniform `1px` hairline border, semantic `IconSquircle`, and optional hairline-divided `bottomBar` (no top-only trim strips).
 2. **Compact Status Pills (`FintechStatusPill`)**: Soft tinted stadium pill with optional semantic dot or `12px` icon.
 3. **Hairline Action Strips (`FintechFlatActionBar`)**: Flat edge-to-edge action rows separated by subtle vertical hairlines (`Spend | Receive | Transfer | Vault`) — cleaner and far less boxy than rows of grey rounded rectangles.
 4. **Modern Custom Popups (`ModernDialogShell` / `showModernDialog` / `showModernConfirmDialog`)**:
    - **Ban raw stock `AlertDialog`** for user-facing popups.
    - Use smooth spring-scale + fade entrance (`Curves.easeOutBack` / `Curves.easeOutCubic`) with subtle frosted `BackdropFilter` dim and automatic reduced-motion fallback.
-   - Include: `3px` semantic top trim (brand / success / warning / danger), `IconSquircle` + bold title + concise subtitle + circular close (`×`) button, keyboard-safe scrollable body (`viewInsets.bottom`), live interactive previews where helpful (e.g., live avatar preview while typing a name, passphrase strength meter), hairline footer divider, and full-height rounded pill action buttons (`Cancel` + primary/destructive CTA with loading indicator).
+   - Include: uniform `1px` hairline border + soft ambient glow (no top-only strips), semantic `IconSquircle` + bold title + concise subtitle + circular close (`×`) button, keyboard-safe scrollable body (`viewInsets.bottom`), live interactive previews where helpful (e.g., live avatar preview while typing a name, passphrase strength meter), hairline footer divider, and full-height rounded pill action buttons (`Cancel` + primary/destructive CTA with loading indicator).
 
 ---
 

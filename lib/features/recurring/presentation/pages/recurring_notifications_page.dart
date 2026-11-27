@@ -11,6 +11,7 @@ import '../../../../core/financial_engine/alert_evaluation_engine.dart';
 import '../../../../core/financial_engine/currency.dart';
 import '../../../../core/financial_engine/money.dart';
 import '../../../../core/utilities/clock.dart';
+import '../../../../shared/widgets/classic_motion.dart';
 import '../../../../shared/widgets/enterprise_layout.dart';
 import '../../../../shared/widgets/fintech_widgets.dart';
 import '../../../../shared/widgets/modern_dialogs.dart';
@@ -160,150 +161,167 @@ class _RecurringNotificationsPageState extends State<RecurringNotificationsPage>
           ],
         ),
       ),
-      floatingActionButton: showFab
-          ? FloatingActionButton.extended(
-              onPressed: () => _openCreateRuleSheet(context, profile, repo),
-              icon: const Icon(Icons.add_rounded),
-              label: const Text('New Rule'),
-            )
-          : null,
+      floatingActionButton: ClassicAnimatedFab(
+        child: showFab
+            ? FloatingActionButton.extended(
+                key: const ValueKey<String>('recurring_fab'),
+                onPressed: () => _openCreateRuleSheet(context, profile, repo),
+                icon: const Icon(Icons.add_rounded),
+                label: const Text('New Rule'),
+              )
+            : null,
+      ),
       body: TabBarView(
         controller: _tabController,
         children: [
-          _loading && _rules == null
-              ? const DashboardSkeletonView()
-              : rules.isEmpty
-              ? EmptyStateView(
-                  icon: Icons.repeat_rounded,
-                  title: 'No recurring rules',
-                  description:
-                      'Schedule rent, salary, SIPs, or utility bills. Deterministic occurrence keys guarantee zero silent duplicates.',
-                  actionLabel: canPost ? 'Create Rule' : null,
-                  onAction: canPost
-                      ? () => _openCreateRuleSheet(context, profile, repo)
-                      : null,
-                )
-              : RefreshIndicator(
-                  onRefresh: () => _reload(profile),
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: EnterprisePageContainer.responsivePadding(
-                      context,
-                      bottom: 96,
-                    ),
-                    child: EnterprisePageContainer(
-                      maxWidth: AppBreakpoints.maxContentWidth,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          for (var i = 0; i < rules.length; i++) ...[
-                            Builder(
-                              builder: (context) {
-                                final r = rules[i];
-                                final isIncome =
-                                    r.transactionType == TransactionType.income;
-                                return StaggeredFadeSlide(
-                                  index: i,
-                                  child: PressScaleCard(
-                                    padding: const EdgeInsets.all(
-                                      AppSpacing.md,
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        IconSquircle(
-                                          icon: Icons.repeat_rounded,
-                                          iconColor: isIncome
-                                              ? cfo.income
-                                              : cfo.transfer,
-                                          backgroundColor: isIncome
-                                              ? cfo.incomeContainer
-                                              : cfo.transferContainer,
-                                          size: 42,
-                                        ),
-                                        const SizedBox(width: AppSpacing.sm),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                r.name,
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: Theme.of(
-                                                  context,
-                                                ).textTheme.titleMedium,
-                                              ),
-                                              Text(
-                                                '${r.cadence.label} • Next: ${UiDateFormatter.shortDayMonthYear(r.nextDueAtUtc)} • ${r.autoCreateDraft ? "Draft" : "Auto-Post"}',
-                                                maxLines: 2,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .bodySmall
-                                                    ?.copyWith(
-                                                      color: cfo.subtleText,
-                                                    ),
-                                              ),
-                                            ],
+          ClassicContentSwitcher(
+            stateKey: _loading && _rules == null
+                ? 'loading'
+                : rules.isEmpty
+                ? 'empty'
+                : 'loaded',
+            child: _loading && _rules == null
+                ? const DashboardSkeletonView()
+                : rules.isEmpty
+                ? EmptyStateView(
+                    icon: Icons.repeat_rounded,
+                    title: 'No recurring rules',
+                    description:
+                        'Schedule rent, salary, SIPs, or utility bills. Deterministic occurrence keys guarantee zero silent duplicates.',
+                    actionLabel: canPost ? 'Create Rule' : null,
+                    onAction: canPost
+                        ? () => _openCreateRuleSheet(context, profile, repo)
+                        : null,
+                  )
+                : RefreshIndicator(
+                    onRefresh: () => _reload(profile),
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: EnterprisePageContainer.responsivePadding(
+                        context,
+                        bottom: 96,
+                      ),
+                      child: EnterprisePageContainer(
+                        maxWidth: AppBreakpoints.maxContentWidth,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            for (var i = 0; i < rules.length; i++) ...[
+                              Builder(
+                                builder: (context) {
+                                  final r = rules[i];
+                                  final isIncome =
+                                      r.transactionType ==
+                                      TransactionType.income;
+                                  return StaggeredFadeSlide(
+                                    index: i,
+                                    child: PressScaleCard(
+                                      padding: const EdgeInsets.all(
+                                        AppSpacing.md,
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          IconSquircle(
+                                            icon: Icons.repeat_rounded,
+                                            iconColor: isIncome
+                                                ? cfo.income
+                                                : cfo.transfer,
+                                            backgroundColor: isIncome
+                                                ? cfo.incomeContainer
+                                                : cfo.transferContainer,
+                                            size: 42,
                                           ),
-                                        ),
-                                        const SizedBox(width: AppSpacing.xs),
-                                        ConstrainedBox(
-                                          constraints: const BoxConstraints(
-                                            maxWidth: 108,
-                                          ),
-                                          child: FittedBox(
-                                            fit: BoxFit.scaleDown,
-                                            alignment: Alignment.centerRight,
-                                            child: MoneyText(
-                                              money: r.amount,
-                                              masked: hideBalances,
-                                              semanticKind: isIncome
-                                                  ? 'income'
-                                                  : null,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .titleSmall
-                                                  ?.copyWith(
-                                                    fontWeight: FontWeight.w700,
-                                                  ),
+                                          const SizedBox(width: AppSpacing.sm),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  r.name,
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: Theme.of(
+                                                    context,
+                                                  ).textTheme.titleMedium,
+                                                ),
+                                                Text(
+                                                  '${r.cadence.label} • Next: ${UiDateFormatter.shortDayMonthYear(r.nextDueAtUtc)} • ${r.autoCreateDraft ? "Draft" : "Auto-Post"}',
+                                                  maxLines: 2,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodySmall
+                                                      ?.copyWith(
+                                                        color: cfo.subtleText,
+                                                      ),
+                                                ),
+                                              ],
                                             ),
                                           ),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Switch(
-                                          value: r.status == 'active',
-                                          onChanged: canPost
-                                              ? (active) async {
-                                                  await repo.toggleStatus(
-                                                    profile.id,
-                                                    r.id,
-                                                    active
-                                                        ? 'active'
-                                                        : 'paused',
-                                                  );
-                                                  await _reload(profile);
-                                                }
-                                              : null,
-                                        ),
-                                      ],
+                                          const SizedBox(width: AppSpacing.xs),
+                                          ConstrainedBox(
+                                            constraints: const BoxConstraints(
+                                              maxWidth: 108,
+                                            ),
+                                            child: FittedBox(
+                                              fit: BoxFit.scaleDown,
+                                              alignment: Alignment.centerRight,
+                                              child: MoneyText(
+                                                money: r.amount,
+                                                masked: hideBalances,
+                                                semanticKind: isIncome
+                                                    ? 'income'
+                                                    : null,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .titleSmall
+                                                    ?.copyWith(
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                    ),
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Switch(
+                                            value: r.status == 'active',
+                                            onChanged: canPost
+                                                ? (active) async {
+                                                    await repo.toggleStatus(
+                                                      profile.id,
+                                                      r.id,
+                                                      active
+                                                          ? 'active'
+                                                          : 'paused',
+                                                    );
+                                                    await _reload(profile);
+                                                  }
+                                                : null,
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                );
-                              },
-                            ),
-                            if (i < rules.length - 1)
-                              const SizedBox(height: AppSpacing.xs),
+                                  );
+                                },
+                              ),
+                              if (i < rules.length - 1)
+                                const SizedBox(height: AppSpacing.xs),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-          _loading && _notifications == null
-              ? const DashboardSkeletonView()
-              : _buildNotificationsTab(context, profile, repo, items),
+          ),
+          ClassicContentSwitcher(
+            stateKey: _loading && _notifications == null ? 'loading' : 'loaded',
+            child: _loading && _notifications == null
+                ? const DashboardSkeletonView()
+                : _buildNotificationsTab(context, profile, repo, items),
+          ),
         ],
       ),
     );
@@ -334,6 +352,7 @@ class _RecurringNotificationsPageState extends State<RecurringNotificationsPage>
               kind == AlertKind.goalMilestone50 ||
               kind == AlertKind.goalCompleted100 ||
               kind == AlertKind.recurringDue ||
+              kind == AlertKind.bucketReminder ||
               kind == AlertKind.testAlert,
       };
     }).toList();
@@ -549,6 +568,12 @@ class _RecurringNotificationsPageState extends State<RecurringNotificationsPage>
                           cfo.transfer,
                           cfo.transferContainer,
                           'RECURRING',
+                        ),
+                        AlertKind.bucketReminder => (
+                          Icons.checklist_rounded,
+                          scheme.primary,
+                          scheme.primaryContainer,
+                          'BUCKET LIST',
                         ),
                       };
 

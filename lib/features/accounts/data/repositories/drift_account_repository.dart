@@ -27,15 +27,12 @@ final class DriftAccountRepository implements AccountRepository {
   final IdGenerator _idGen;
   final UtcClock _clock;
 
-  @override
-  Stream<List<FinancialAccountEntity>> watchAccounts(
+  Selectable<QueryRow> _accountsSelect(
     ProfileId profileId, {
     bool includeArchived = false,
   }) {
-    // Recompute derived ledger balances whenever accounts, journals, or postings change.
-    return _db
-        .customSelect(
-          '''
+    return _db.customSelect(
+      '''
           SELECT
             fa.id,
             fa.profile_id,
@@ -67,17 +64,27 @@ final class DriftAccountRepository implements AccountRepository {
           GROUP BY fa.id
           ORDER BY fa.created_at_utc ASC
           ''',
-          variables: [Variable.withString(profileId.value)],
-          readsFrom: {
-            _db.financialAccounts,
-            _db.profiles,
-            _db.ledgerAccounts,
-            _db.ledgerPostings,
-            _db.journalEntries,
-          },
-        )
-        .watch()
-        .map((rows) => rows.map(_mapRow).toList());
+      variables: [Variable.withString(profileId.value)],
+      readsFrom: {
+        _db.financialAccounts,
+        _db.profiles,
+        _db.ledgerAccounts,
+        _db.ledgerPostings,
+        _db.journalEntries,
+      },
+    );
+  }
+
+  @override
+  Stream<List<FinancialAccountEntity>> watchAccounts(
+    ProfileId profileId, {
+    bool includeArchived = false,
+  }) {
+    // Recompute derived ledger balances whenever accounts, journals, or postings change.
+    return _accountsSelect(
+      profileId,
+      includeArchived: includeArchived,
+    ).watch().map((rows) => rows.map(_mapRow).toList());
   }
 
   @override
@@ -86,11 +93,11 @@ final class DriftAccountRepository implements AccountRepository {
     bool includeArchived = false,
   }) async {
     try {
-      final list = await watchAccounts(
+      final rows = await _accountsSelect(
         profileId,
         includeArchived: includeArchived,
-      ).first;
-      return Success(list);
+      ).get();
+      return Success(rows.map(_mapRow).toList());
     } catch (_) {
       return const FailureResult(DatabaseFailure());
     }
@@ -102,8 +109,12 @@ final class DriftAccountRepository implements AccountRepository {
     String accountId,
   ) async {
     try {
-      final list = await watchAccounts(profileId, includeArchived: true).first;
-      for (final a in list) {
+      final rows = await _accountsSelect(
+        profileId,
+        includeArchived: true,
+      ).get();
+      for (final row in rows) {
+        final a = _mapRow(row);
         if (a.id == accountId) return Success(a);
       }
       return const FailureResult(NotFoundFailure());
